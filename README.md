@@ -11,10 +11,10 @@
 4.  view - все данные, необходимые для работы с консолью.
     
 Приложение имеет следующие сущности: 
-    1. User (id, firstName, lastName, List posts, Region region) 
-    2. Post (id, content, created, updated) 
-    3. Region (id, name) 
-    4. Role (enum ADMIN, MODERATOR, USER)
+1.  User (id, firstName, lastName, List posts, Region region) 
+2.  Post (id, content, created, updated) 
+3.  Region (id, name) 
+4.  Role (enum ADMIN, MODERATOR, USER)
 
 В качестве хранилища данных необходимо использовать текстовые файлы: users.txt, posts.txt, regions.txt
 
