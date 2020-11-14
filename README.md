@@ -25,7 +25,7 @@
 interface UserRepository extends GenericRepository<User, Long>
 class JavaIOUserRepositoryImpl implements UserRepository
 
-Сервис-классы:
+Интерфейсы сервисы:
 User, UserRepository, UserController, UserView и т.д. 
 
 ## Результат 
