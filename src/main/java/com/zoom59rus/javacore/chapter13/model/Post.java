@@ -64,5 +64,13 @@ public class Post {
         return Objects.hash(getId(), getContent(), getCreated(), getUpdated());
     }
 
-
+    @Override
+    public String toString() {
+        return "Post{" +
+                "id=" + id +
+                ", content='" + content + '\'' +
+                ", created=" + created +
+                ", updated=" + updated +
+                '}';
+    }
 }
