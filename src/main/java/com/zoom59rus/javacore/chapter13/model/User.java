@@ -7,15 +7,15 @@ public class User extends BaseClass{
     private Long id;
     private String firstName;
     private String lastName;
-    private List<Integer> postsId;
+    private List<Post> posts;
     private Region region;
 
-    public User(Long id, String firstName, String lastName, List<Integer> postId, Region region) {
+    public User(Long id, String firstName, String lastName, List<Post> postId, Region region) {
         super(id);
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.postsId = postId;
+        this.posts = postId;
         this.region = region;
     }
 
@@ -43,12 +43,12 @@ public class User extends BaseClass{
         this.lastName = lastName;
     }
 
-    public List<Integer> getPosts() {
-        return postsId;
+    public List<Post> getPosts() {
+        return posts;
     }
 
-    public void setPosts(List<Integer> posts) {
-        this.postsId = posts;
+    public void setPosts(List<Post> posts) {
+        this.posts = posts;
     }
 
     public Region getRegion() {
@@ -82,7 +82,7 @@ public class User extends BaseClass{
                 "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
-                ", posts=" + postsId +
+                ", posts=" + posts +
                 ", region=" + region +
                 '}';
     }

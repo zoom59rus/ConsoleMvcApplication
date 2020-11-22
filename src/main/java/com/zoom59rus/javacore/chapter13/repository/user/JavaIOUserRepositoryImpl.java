@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import main.java.com.zoom59rus.javacore.chapter13.model.User;
+import main.java.com.zoom59rus.javacore.chapter13.model.dtos.UserDto;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -50,7 +51,7 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
 
         user.setId(currentId++);
         try (FileWriter fw = new FileWriter(path, true)) {
-            fw.write(gson.toJson(user) + "\n");
+            fw.write(gson.toJson(UserDto.fromUser(user)) + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }

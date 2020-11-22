@@ -1,6 +1,7 @@
 package main.java.com.zoom59rus.javacore.chapter13.view;
 
 import main.java.com.zoom59rus.javacore.chapter13.InputFilter;
+import main.java.com.zoom59rus.javacore.chapter13.controller.UserController;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,13 +11,19 @@ import java.util.List;
 
 public final class UserMenu {
     private static UserMenu userMenu;
+    private UserController userController;
 
-    private UserMenu() {
+    private UserMenu() throws IOException {
+        userController = new UserController();
     }
 
-    public static UserMenu getInstance() {
+    public static UserMenu getInstance(){
         if (userMenu == null) {
-            userMenu = new UserMenu();
+            try {
+                userMenu = new UserMenu();
+            } catch (IOException e) {
+                System.err.print(e.getMessage());
+            }
         }
 
         return userMenu;
@@ -33,7 +40,7 @@ public final class UserMenu {
 
         switch (InputFilter.matchMenuNumber()) {
             case 1: {
-                addUserMenu();
+                menuAddUser();
             }
             case 2: {
                 searchUserMenu();
@@ -54,7 +61,7 @@ public final class UserMenu {
         }
     }
 
-    public void addUserMenu() {
+    public void menuAddUser() {
         System.out.println("Меню создания пользователя:");
         try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
             System.out.print("Введите имя: ");
@@ -78,13 +85,8 @@ public final class UserMenu {
             System.out.print("Введите публикацию №" + (postList.size() + 1) + ": ");
             String post;
             while (!(post = br.readLine()).equals("")) {
-                if (!InputFilter.matchEmail(post)) {
-                    System.out.println("Вы ошиблись в написании электронной почты, попробуйте еще раз.");
-                    System.out.print("Введите почту №" + (postList.size() + 1) + ": ");
-                    continue;
-                }
                 postList.add(post);
-                System.out.print("Введите почту №" + (postList.size() + 1) + ": ");
+                System.out.print("Введите публикацию №" + (postList.size() + 1) + ": ");
             }
 
             System.out.print("Введите регион: ");
@@ -94,6 +96,8 @@ public final class UserMenu {
                 System.out.print("Введите регион: ");
                 region = br.readLine();
             }
+
+            userController.save(firstName, lastName, postList, region);
 
             showMainMenu();
         } catch (IOException e) {
