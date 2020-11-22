@@ -19,15 +19,13 @@ public class JavaIOPostRepositoryImpl implements PostRepository {
     private Long currentId;
 
     public JavaIOPostRepositoryImpl() throws IOException {
-        currentId = getNextId();
     }
 
-    public static Long getNextId() throws IOException {
+    public Long getNextId() throws IOException {
         Long id = 1L;
         try (FileReader fReader = new FileReader(path);
              JsonReader jReader = gson.newJsonReader(fReader)
         ) {
-
             while (fReader.ready()) {
                 Post post = gson.fromJson(jReader, Post.class);
                 if (post.getId() < id) {
@@ -39,6 +37,8 @@ public class JavaIOPostRepositoryImpl implements PostRepository {
             System.err.print(e.getMessage());
         }
 
+        currentId = id;
+
         return id;
     }
 
@@ -48,7 +48,11 @@ public class JavaIOPostRepositoryImpl implements PostRepository {
             return get(post.getContent());
         }
 
-        post.setId(currentId++);
+        if (currentId == null) {
+            post.setId(getNextId());
+        } else {
+            post.setId(currentId);
+        }
         try (FileWriter fw = new FileWriter(path, true)) {
             fw.write(gson.toJson(post) + "\n");
         } catch (IOException e) {

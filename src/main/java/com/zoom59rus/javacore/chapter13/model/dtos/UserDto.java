@@ -9,12 +9,14 @@ import java.util.List;
 import java.util.Objects;
 
 public class UserDto {
+    private Long id;
     private String firstName;
     private String lastName;
     private List<Long> postsId;
     private Region region;
 
     public UserDto(String firstName, String lastName, List<Long> postsId, Region region) {
+        this.id = null;
         this.firstName = firstName;
         this.lastName = lastName;
         this.postsId = postsId;
@@ -24,11 +26,21 @@ public class UserDto {
     public static UserDto fromUser(User user){
         List<Long> postsId = new ArrayList<>();
         user.getPosts().forEach(post -> postsId.add(post.getId()));
-        return new UserDto(user.getFirstName(), user.getLastName(), postsId, user.getRegion());
+        UserDto userDto = new UserDto(user.getFirstName(), user.getLastName(), postsId, user.getRegion());
+        userDto.setId(user.getId());
+        return userDto;
     }
 
     public static User fromUserDto(UserDto userDto, List<Post> postList){
         return new User(null, userDto.getFirstName(), userDto.getLastName(), postList, userDto.getRegion());
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getFirstName() {

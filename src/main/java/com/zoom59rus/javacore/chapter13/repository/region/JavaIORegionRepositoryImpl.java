@@ -19,10 +19,9 @@ public class JavaIORegionRepositoryImpl implements RegionRepository {
     private Long currentId;
 
     public JavaIORegionRepositoryImpl() throws IOException {
-        currentId = getNextId();
     }
 
-    public static Long getNextId() throws IOException {
+    public Long getNextId() throws IOException {
         Long id = 1L;
         try (FileReader fReader = new FileReader(path);
              JsonReader jReader = gson.newJsonReader(fReader)
@@ -38,7 +37,7 @@ public class JavaIORegionRepositoryImpl implements RegionRepository {
         } catch (FileNotFoundException e) {
             System.err.print(e.getMessage());
         }
-
+        currentId = id;
         return id;
     }
 
@@ -47,8 +46,11 @@ public class JavaIORegionRepositoryImpl implements RegionRepository {
         if (isExist(region.getName())) {
             return get(region.getName());
         }
-
-        region.setId(currentId++);
+        if (currentId == null) {
+            region.setId(getNextId());
+        } else {
+            region.setId(currentId);
+        }
         try (FileWriter fw = new FileWriter(path, true)) {
             fw.write(gson.toJson(region) + "\n");
         } catch (IOException e) {
