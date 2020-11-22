@@ -1,15 +1,11 @@
 package main.java.com.zoom59rus.javacore.chapter13.view;
 
 import main.java.com.zoom59rus.javacore.chapter13.InputFilter;
-import main.java.com.zoom59rus.javacore.chapter13.model.Post;
-import main.java.com.zoom59rus.javacore.chapter13.model.Region;
-import main.java.com.zoom59rus.javacore.chapter13.model.User;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public final class UserMenu {
@@ -43,10 +39,10 @@ public final class UserMenu {
                 searchUserMenu();
             }
             case 3: {
-
+                updateUserMenu();
             }
             case 4: {
-
+                removeUserMenu();
             }
             case 0: {
                 System.exit(0);
@@ -77,9 +73,9 @@ public final class UserMenu {
                 lastName = br.readLine();
             }
 
-            System.out.println("Введите электронную почту(ы): ");
+            System.out.println("Введите публикацию(и): ");
             List<String> postList = new ArrayList<>();
-            System.out.print("Введите почту №" + (postList.size() + 1) + ": ");
+            System.out.print("Введите публикацию №" + (postList.size() + 1) + ": ");
             String post;
             while (!(post = br.readLine()).equals("")) {
                 if (!InputFilter.matchEmail(post)) {
@@ -145,5 +141,9 @@ public final class UserMenu {
         System.out.println("Введите id пользователя для удаления.");
 
         int removeUserId = InputFilter.matchMenuNumber();
+    }
+
+    public void updateUserMenu(){
+
     }
 }

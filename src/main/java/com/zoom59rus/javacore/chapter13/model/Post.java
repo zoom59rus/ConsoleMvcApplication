@@ -3,23 +3,26 @@ package main.java.com.zoom59rus.javacore.chapter13.model;
 import java.util.Date;
 import java.util.Objects;
 
-public class Post {
+public class Post extends BaseClass{
     private Long id;
     private String content;
     private Date created;
     private Date updated;
 
     public Post(Long id, String content, Date created) {
+        super(id);
         this.id = id;
         this.content = content;
         this.created = created;
         this.updated = created;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
 
+    @Override
     public void setId(Long id) {
         this.id = id;
     }

@@ -3,18 +3,19 @@ package main.java.com.zoom59rus.javacore.chapter13.model;
 import java.util.List;
 import java.util.Objects;
 
-public class User {
+public class User extends BaseClass{
     private Long id;
     private String firstName;
     private String lastName;
-    private List<Post> posts;
+    private List<Integer> postsId;
     private Region region;
 
-    public User(Long id, String firstName, String lastName, List<Post> posts, Region region) {
+    public User(Long id, String firstName, String lastName, List<Integer> postId, Region region) {
+        super(id);
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.posts = posts;
+        this.postsId = postId;
         this.region = region;
     }
 
@@ -42,12 +43,12 @@ public class User {
         this.lastName = lastName;
     }
 
-    public List<Post> getPosts() {
-        return posts;
+    public List<Integer> getPosts() {
+        return postsId;
     }
 
-    public void setPosts(List<Post> posts) {
-        this.posts = posts;
+    public void setPosts(List<Integer> posts) {
+        this.postsId = posts;
     }
 
     public Region getRegion() {
@@ -81,7 +82,7 @@ public class User {
                 "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
-                ", posts=" + posts +
+                ", posts=" + postsId +
                 ", region=" + region +
                 '}';
     }
