@@ -3,54 +3,61 @@ package main.java.com.zoom59rus.javacore.chapter13.repository.region;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
+import main.java.com.zoom59rus.javacore.chapter13.model.Post;
 import main.java.com.zoom59rus.javacore.chapter13.model.Region;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class JavaIORegionRepositoryImpl implements RegionRepository {
     private static final String path = "/Users/anton/JavaDev/ConsoleMvcApplication/src/main/resources/files/regions.txt";
     private static Gson gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
-    private Long currentId;
+    private AtomicLong currentId;
 
-    public JavaIORegionRepositoryImpl() throws IOException {
+    public JavaIORegionRepositoryImpl(){
     }
 
-    public Long getNextId() throws IOException {
-        Long id = 1L;
-        try (FileReader fReader = new FileReader(path);
-             JsonReader jReader = gson.newJsonReader(fReader)
-        ) {
-
-            while (fReader.ready()) {
-                Region region = gson.fromJson(jReader, Region.class);
-                if (region.getId() < id) {
-                    continue;
+    @Override
+    public AtomicLong getNextId() throws IOException {
+        AtomicLong id = new AtomicLong(1);
+        if (Files.size(Paths.get(path)) != 0) {
+            try (FileReader fReader = new FileReader(path);
+                 JsonReader jReader = gson.newJsonReader(fReader)
+            ) {
+                while (fReader.ready()) {
+                    Post post = gson.fromJson(jReader, Post.class);
+                    if (post.getId() < id.get()) {
+                        continue;
+                    }
+                    id.set(post.getId());
                 }
-                id = region.getId() + 1;
+
+                currentId = new AtomicLong(id.incrementAndGet());
+                return currentId;
+            } catch (FileNotFoundException e) {
+                System.err.print(e.getMessage());
             }
-        } catch (FileNotFoundException e) {
-            System.err.print(e.getMessage());
         }
+
         currentId = id;
-        return id;
+
+        return currentId;
     }
 
     @Override
     public Region save(Region region) throws IOException {
-        if (isExist(region.getName())) {
-            return get(region.getName());
-        }
+
         if (currentId == null) {
-            region.setId(getNextId());
+            region.setId(getNextId().getAndIncrement());
         } else {
-            region.setId(currentId);
+            region.setId(currentId.getAndIncrement());
         }
+
         try (FileWriter fw = new FileWriter(path, true)) {
             fw.write(gson.toJson(region) + "\n");
         } catch (IOException e) {
@@ -62,9 +69,17 @@ public class JavaIORegionRepositoryImpl implements RegionRepository {
 
     @Override
     public Region get(Long id) throws IOException {
-        Region region = searchById(id);
-        if (region != null) {
-            return region;
+        try(FileReader fReader = new FileReader(path);
+            JsonReader jReader = gson.newJsonReader(fReader);
+        ){
+            while (fReader.ready()){
+                Region r = gson.fromJson(jReader, Region.class);
+                if(r.getId().equals(id)){
+                    return r;
+                }
+            }
+        }catch (FileNotFoundException e){
+            System.err.print(e.getMessage());
         }
 
         return null;
@@ -72,60 +87,20 @@ public class JavaIORegionRepositoryImpl implements RegionRepository {
 
     @Override
     public Region get(String name) throws IOException {
-        Region region = searchByName(name);
-        if (region != null) {
-            return region;
+        try(FileReader fReader = new FileReader(path);
+            JsonReader jReader = gson.newJsonReader(fReader)
+        ){
+            while (fReader.ready()){
+                Region r = gson.fromJson(jReader, Region.class);
+                if(r.getName().equals(name)){
+                    return r;
+                }
+            }
+        }catch (FileNotFoundException e){
+            System.err.print(e.getMessage());
         }
 
         return null;
-    }
-
-    @Override
-    public Region searchById(Long id) throws IOException {
-        Region region = null;
-        try (FileReader fReader = new FileReader(path);
-             JsonReader jReader = gson.newJsonReader(fReader)
-        ) {
-            while (fReader.ready()) {
-                region = gson.fromJson(jReader, Region.class);
-                if (region.getId().equals(id)) {
-                    return region;
-                }
-            }
-        } catch (FileNotFoundException e) {
-            System.err.print(e.getMessage());
-        }
-
-        return region;
-    }
-
-    @Override
-    public Region searchByName(String name) throws IOException {
-        Region region = null;
-        try (FileReader fReader = new FileReader(path);
-             JsonReader jReader = gson.newJsonReader(fReader)
-        ) {
-            while (fReader.ready()) {
-                region = gson.fromJson(jReader, Region.class);
-                if (region.getName().equals(name)) {
-                    return region;
-                }
-            }
-        } catch (FileNotFoundException e) {
-            System.err.print(e.getMessage());
-        }
-
-        return region;
-    }
-
-    @Override
-    public boolean isExist(String name) throws IOException {
-        Region r = searchByName(name);
-        if (r != null) {
-            return true;
-        }
-
-        return false;
     }
 
     @Override
@@ -141,12 +116,13 @@ public class JavaIORegionRepositoryImpl implements RegionRepository {
         }
 
         List<Region> result = regionList.stream()
-                .filter(r -> !r.getId().equals(id))
-                .collect(Collectors.toList());
+                                                .filter(r -> !r.getId().equals(id))
+                                                .collect(Collectors.toList());
 
         saveAll(result);
     }
 
+    @Override
     public void saveAll(List<Region> regionList){
         try (FileWriter fileWriter = new FileWriter(path)) {
             for (Region r : regionList) {
@@ -161,6 +137,7 @@ public class JavaIORegionRepositoryImpl implements RegionRepository {
         }
     }
 
+    @Override
     public List<Region> getAll() throws IOException {
         List<Region> regionList = new ArrayList<>();
         try (FileReader fileReader = new FileReader(path);

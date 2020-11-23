@@ -3,7 +3,6 @@ package main.java.com.zoom59rus.javacore.chapter13.controller;
 import main.java.com.zoom59rus.javacore.chapter13.model.Post;
 import main.java.com.zoom59rus.javacore.chapter13.model.Region;
 import main.java.com.zoom59rus.javacore.chapter13.model.User;
-import main.java.com.zoom59rus.javacore.chapter13.model.dtos.UserDto;
 import main.java.com.zoom59rus.javacore.chapter13.repository.post.JavaIOPostRepositoryImpl;
 import main.java.com.zoom59rus.javacore.chapter13.repository.post.PostRepository;
 import main.java.com.zoom59rus.javacore.chapter13.repository.region.JavaIORegionRepositoryImpl;
@@ -12,7 +11,6 @@ import main.java.com.zoom59rus.javacore.chapter13.repository.user.JavaIOUserRepo
 import main.java.com.zoom59rus.javacore.chapter13.repository.user.UserRepository;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,31 +19,27 @@ public class UserController {
     PostRepository postRepository;
     RegionRepository regionRepository;
 
-    public UserController() throws IOException {
+    public UserController(){
         this.userRepository = new JavaIOUserRepositoryImpl();
         this.postRepository = new JavaIOPostRepositoryImpl();
         this.regionRepository = new JavaIORegionRepositoryImpl();
     }
 
-    public User save(String firstName, String lastName, List<String> posts, String region){
-        User savedUser;
-        Region r = save(new Region(null, region));
-        List<Post> postsList = posts.stream()
-                .map(p -> save(new Post(null, p, new Date())))
-                .collect(Collectors.toList());
+    public User save(String firstName, String lastName, List<Post> postList, Region region) {
+        List<Post> persistPostList = postList.stream().map(this::save).collect(Collectors.toList());
+        Region persistRegion = save(region);
+        User persistUser = new User(null, firstName, lastName, persistPostList, persistRegion);
 
-        User persist = new User(null, firstName, lastName, postsList, r);
         try {
-            savedUser = userRepository.save(persist);
-            return savedUser;
+            userRepository.save(persistUser);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return null;
+        return persistUser;
     }
 
-    public Region save(Region region){
+    public Region save(Region region) {
         Region persist = null;
         try {
             persist = regionRepository.save(region);
@@ -56,7 +50,7 @@ public class UserController {
         return persist;
     }
 
-    public Post save(Post post){
+    public Post save(Post post) {
         Post persist = null;
         try {
             persist = postRepository.save(post);
@@ -65,12 +59,5 @@ public class UserController {
         }
 
         return persist;
-    }
-
-
-
-
-    public List<Region> getAllRegions() throws IOException {
-        return regionRepository.getAll();
     }
 }

@@ -2,11 +2,14 @@ package main.java.com.zoom59rus.javacore.chapter13.view;
 
 import main.java.com.zoom59rus.javacore.chapter13.InputFilter;
 import main.java.com.zoom59rus.javacore.chapter13.controller.UserController;
+import main.java.com.zoom59rus.javacore.chapter13.model.Post;
+import main.java.com.zoom59rus.javacore.chapter13.model.Region;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public final class UserMenu {
@@ -81,21 +84,22 @@ public final class UserMenu {
             }
 
             System.out.println("Введите публикацию(и): ");
-            List<String> postList = new ArrayList<>();
+            List<Post> postList = new ArrayList<>();
             System.out.print("Введите публикацию №" + (postList.size() + 1) + ": ");
-            String post;
-            while (!(post = br.readLine()).equals("")) {
-                postList.add(post);
+            String content;
+            while (!(content = br.readLine()).equals("")) {
+                postList.add(new Post(null, content, new Date()));
                 System.out.print("Введите публикацию №" + (postList.size() + 1) + ": ");
             }
 
             System.out.print("Введите регион: ");
-            String region = br.readLine();
-            while (!InputFilter.matchRegion(region)) {
+            String r = br.readLine();
+            while (!InputFilter.matchRegion(r)) {
                 System.out.println("Вы ошиблись в написании региона, попробуйте еще раз.");
                 System.out.print("Введите регион: ");
-                region = br.readLine();
+                r = br.readLine();
             }
+            Region region = new Region(null, r);
 
             userController.save(firstName, lastName, postList, region);
 
