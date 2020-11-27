@@ -1,156 +1,223 @@
-package main.java.com.zoom59rus.javacore.chapter13.repository.user;
+package com.zoom59rus.javacore.chapter13.repository.user;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.stream.JsonReader;
-import main.java.com.zoom59rus.javacore.chapter13.model.Post;
-import main.java.com.zoom59rus.javacore.chapter13.model.User;
-import main.java.com.zoom59rus.javacore.chapter13.model.dtos.UserDto;
+import com.google.gson.reflect.TypeToken;
+import com.zoom59rus.javacore.chapter13.model.User;
+import org.apache.commons.io.IOUtils;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.*;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class JavaIOUserRepositoryImpl implements UserRepository {
-    private static final String path = "/Users/anton/JavaDev/ConsoleMvcApplication/src/main/resources/files/users.txt";
+    private static final String path = "/Users/anton/JavaDev/ConsoleMvcApplication/src/main/resources/files/users.json";
     private static Gson gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
-    private AtomicLong currentId;
+    private static AtomicLong id;
 
-    public JavaIOUserRepositoryImpl(){
+    public JavaIOUserRepositoryImpl() {
     }
 
-    public AtomicLong getNextId() throws IOException {
+    private AtomicLong getNextId() throws IOException {
         AtomicLong id = new AtomicLong(1);
-        if (Files.size(Paths.get(path)) != 0) {
-            try (FileReader fReader = new FileReader(path);
-                 JsonReader jReader = gson.newJsonReader(fReader)
-            ) {
-                while (fReader.ready()) {
-                    Post post = gson.fromJson(jReader, Post.class);
-                    if (post.getId() < id.get()) {
-                        continue;
-                    }
-                    id.set(post.getId());
-                }
+        List<User> userList = getAll();
+        if(userList.isEmpty()){
+            return id;
+        }
 
-                currentId = new AtomicLong(id.incrementAndGet());
-                return currentId;
-            } catch (FileNotFoundException e) {
-                System.err.print(e.getMessage());
+        for (User user : userList) {
+            if(user.getId() > id.get()){
+                id.set(user.getId());
             }
         }
 
-        currentId = id;
+        id.incrementAndGet();
+        return id;
+    }
 
-        return currentId;
+    synchronized private Long getId() throws IOException {
+        if(id == null){
+            id = getNextId();
+        }
+
+        return id.getAndIncrement();
     }
 
     @Override
     public User save(User user) throws IOException {
+        List<User> userList = getAll();
+        user.setId(getId());
+        userList.add(user);
 
-        if (currentId == null) {
-            user.setId(getNextId().getAndIncrement());
-        } else {
-            user.setId(currentId.getAndIncrement());
-        }
+        Type list = new TypeToken<List<User>>(){}.getType();
+        String json = gson.toJson(userList, list);
 
-        try (FileWriter fw = new FileWriter(path, true)) {
-            fw.write(gson.toJson(UserDto.fromUser(user)) + "\n");
-        } catch (IOException e) {
-            e.printStackTrace();
+        try(FileWriter fw = new FileWriter(path)){
+            fw.write(json);
         }
 
         return user;
     }
 
     @Override
-    public User get(Long id) throws IOException {
-        try(FileReader fReader = new FileReader(path);
-            JsonReader jReader = gson.newJsonReader(fReader);
-        ){
-            while (fReader.ready()){
-                User u = gson.fromJson(jReader, User.class);
-                if(u.getId().equals(id)){
-                    return u;
-                }
-            }
-        }catch (FileNotFoundException e){
-            System.err.print(e.getMessage());
+    public void updateUser(User user) throws IOException {
+        remove(user.getId());
+        List<User> u = getAll();
+        u.add(user);
+
+        Type list = new TypeToken<List<User>>(){}.getType();
+        String json = gson.toJson(u, list);
+
+        try(FileWriter fw = new FileWriter(path)){
+            fw.write(json);
+        }
+    }
+
+    @Override
+    public List<User> saveAll(List<User> lists) throws IOException {
+        List<User> persistUserList = lists.stream()
+                .peek(u -> {
+                    try {
+                        u.setId(getId());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                })
+                .collect(Collectors.toList());
+
+        List<User> userList = getAll();
+        userList.addAll(persistUserList);
+
+        Type list = new TypeToken<List<User>>(){}.getType();
+        String json = gson.toJson(userList, list);
+
+        try(FileWriter fw = new FileWriter(path)){
+            fw.write(json);
         }
 
-        return null;
+        return persistUserList;
+    }
+
+    @Override
+    public User get(Long id) throws IOException {
+        return getAll().stream()
+                .filter(u -> u.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
     public User get(String name) throws IOException {
-        try(FileReader fReader = new FileReader(path);
-            JsonReader jReader = gson.newJsonReader(fReader);
-        ){
-            while (fReader.ready()){
-                User u = gson.fromJson(jReader, User.class);
-                if(u.getFirstName().equals(name)){
-                    return u;
-                }
-            }
-        }catch (FileNotFoundException e){
-            System.err.print(e.getMessage());
-        }
-
-        return null;
+        return getAll().stream()
+                .filter(u -> u.getFirstName().equals(name))
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
-    public void remove(Long id) {
-        List<User> userList = new ArrayList<>();
-        try {
-            userList = getAll();
-        } catch (IOException e) {
-            System.err.print(e.getMessage());
-        }
-        if(userList.size() == 0){
-            return;
-        }
+    public User getById(Long id) throws IOException {
+        return get(id);
+    }
 
-        List<User> result = userList.stream()
-                .filter(r -> !r.getId().equals(id))
+    @Override
+    public User getUserByFirstName(String firsName) throws IOException {
+        return get(firsName);
+    }
+
+    @Override
+    public User getUserByLastName(String lastName) throws IOException {
+        return getAll().stream()
+                .filter(u -> u.getLastName().equals(lastName))
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Override
+    public User getUserByFirstAndLastNames(String firstName, String lastName) throws IOException {
+
+        return getAll().stream()
+                .filter(u -> u.getFirstName().equals(firstName))
+                .filter(u -> u.getLastName().equals(lastName))
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Override
+    public List<User> getUsersByRegion(String region) throws IOException {
+        return getAll().stream()
+                .filter(u -> u.getRegion().getName().equals(region))
                 .collect(Collectors.toList());
-
-        saveAll(result);
     }
 
-    public void saveAll(List<User> userList){
-        try (FileWriter fileWriter = new FileWriter(path)) {
-            for (User r : userList) {
-                try {
-                    fileWriter.write(gson.toJson(UserDto.fromUser(r)) + "\n");
-                } catch (IOException e) {
-                    System.err.print(e.getMessage());
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    @Override
+    public User getUsersByPost(Long postId) throws IOException {
+        return getAll().stream()
+                .filter(u -> u.getPostsId().contains(postId))
+                .findFirst()
+                .orElse(null);
     }
 
+    @Override
+    public List<User> getUsersByName(String firsName) throws IOException {
+        return getAll().stream()
+                .filter(u -> u.getFirstName().equals(firsName))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> getUsersByLastName(String lastName) throws IOException {
+        return getAll().stream()
+                .filter(u -> u.getLastName().equals(lastName))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> getUsersByFirstAndLastNames(String firstName, String lastName) throws IOException {
+        return getUsersByName(firstName).stream()
+                .filter(u -> u.getLastName().equals(lastName))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<User> getAll() throws IOException {
-        List<User> userList = new ArrayList<>();
-        try (FileReader fileReader = new FileReader(path);
-             JsonReader jsonReader = gson.newJsonReader(fileReader)
-        ){
-            while (fileReader.ready()) {
-                userList.add(gson.fromJson(jsonReader, User.class));
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        Type list = new TypeToken<List<User>>(){}.getType();
+        List<User> userList = gson.fromJson(loadFromData(), list);
+        if(userList == null){
+            return new ArrayList<>();
         }
 
         return userList;
+    }
+
+    @Override
+    public void remove(Long id) throws IOException {
+        List<User> userList = getAll();
+        if(userList.isEmpty()){
+            return;
+        }
+        if(!userList.contains(get(id))){
+            return;
+        }
+
+        userList = userList.stream()
+                .filter(u -> !u.getId().equals(id))
+                .collect(Collectors.toList());
+
+        Type list = new TypeToken<List<User>>(){}.getType();
+        String json = gson.toJson(userList, list);
+        try(FileWriter fw = new FileWriter(path)){
+            fw.write(json);
+        }
+
+    }
+
+    private String loadFromData() throws IOException{
+        try(InputStream is = new FileInputStream(path)){
+            return IOUtils.toString(is, StandardCharsets.UTF_8);
+        }
     }
 }

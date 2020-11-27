@@ -1,9 +1,10 @@
-package main.java.com.zoom59rus.javacore.chapter13.view;
+package com.zoom59rus.javacore.chapter13.view;
 
-import main.java.com.zoom59rus.javacore.chapter13.InputFilter;
-import main.java.com.zoom59rus.javacore.chapter13.controller.UserController;
-import main.java.com.zoom59rus.javacore.chapter13.model.Post;
-import main.java.com.zoom59rus.javacore.chapter13.model.Region;
+import com.zoom59rus.javacore.chapter13.InputFilter;
+import com.zoom59rus.javacore.chapter13.controller.UserController;
+import com.zoom59rus.javacore.chapter13.model.Post;
+import com.zoom59rus.javacore.chapter13.model.Region;
+import com.zoom59rus.javacore.chapter13.model.dtos.UserDto;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,12 +16,14 @@ import java.util.List;
 public final class UserMenu {
     private static UserMenu userMenu;
     private UserController userController;
+    private BufferedReader br;
 
     private UserMenu() throws IOException {
         userController = new UserController();
+        this.br = new BufferedReader(new InputStreamReader(System.in));
     }
 
-    public static UserMenu getInstance(){
+    public static UserMenu getInstance() {
         if (userMenu == null) {
             try {
                 userMenu = new UserMenu();
@@ -32,7 +35,7 @@ public final class UserMenu {
         return userMenu;
     }
 
-    public void showMainMenu() {
+    public void showMainMenu() throws IOException {
         System.out.println("Выберите действие:");
         System.out.println();
         System.out.println("[1] Добавить пользователя.");
@@ -41,7 +44,7 @@ public final class UserMenu {
         System.out.println("[4] Удалить пользователя.");
         System.out.println("[0] Выход.");
 
-        switch (InputFilter.matchMenuNumber()) {
+        switch (matchMenuNumber()) {
             case 1: {
                 menuAddUser();
             }
@@ -66,10 +69,10 @@ public final class UserMenu {
 
     public void menuAddUser() {
         System.out.println("Меню создания пользователя:");
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+        try {
             System.out.print("Введите имя: ");
             String firstName = br.readLine();
-            while (!InputFilter.matchName(firstName)) {
+            while (matchName(firstName)) {
                 System.out.println("Вы ошиблись в написании имени, попробуйте еще раз.");
                 System.out.print("Введите имя: ");
                 firstName = br.readLine();
@@ -77,7 +80,7 @@ public final class UserMenu {
 
             System.out.print("Введите фамилию: ");
             String lastName = br.readLine();
-            while (!InputFilter.matchName(lastName)) {
+            while (matchName(lastName)) {
                 System.out.println("Вы ошиблись в написании фамилии, попробуйте еще раз.");
                 System.out.print("Введите фамилию: ");
                 lastName = br.readLine();
@@ -94,14 +97,14 @@ public final class UserMenu {
 
             System.out.print("Введите регион: ");
             String r = br.readLine();
-            while (!InputFilter.matchRegion(r)) {
+            while (matchRegion(r)) {
                 System.out.println("Вы ошиблись в написании региона, попробуйте еще раз.");
                 System.out.print("Введите регион: ");
                 r = br.readLine();
             }
             Region region = new Region(null, r);
 
-            userController.save(firstName, lastName, postList, region);
+            userController.save(new UserDto(null, firstName, lastName, postList, region));
 
             showMainMenu();
         } catch (IOException e) {
@@ -109,29 +112,57 @@ public final class UserMenu {
         }
     }
 
-    public void searchUserMenu() {
+    public void searchUserMenu() throws IOException {
         System.out.println("Меню поиска пользователя.");
         System.out.println("Критерий поиска:");
         System.out.println("[1] Поиск по id.");
         System.out.println("[2] Поиск по Имени.");
         System.out.println("[3] Поиск по Фамилии.");
-        System.out.println("[4] Поиск по email.");
-        System.out.println("[5] Поиск по региону.");
-        System.out.println("[6] Возврат в главное меню.");
+        System.out.println("[4] Поиск по Имени и Фамилии.");
+        System.out.println("[5] Поиск по контенту.");
+        System.out.println("[6] Поиск по региону.");
+        System.out.println("[7] Возврат в главное меню.");
         System.out.println("[0] Выход из программы.");
 
-        switch (InputFilter.matchMenuNumber()) {
+        switch (matchMenuNumber()) {
             case 1: {
+                System.out.print("Введите id пользователя: ");
+                Long id = Long.parseLong(br.readLine());
+                System.out.println(userController.getById(id));
+                searchUserMenu();
             }
             case 2: {
+                System.out.print("Введите Имя пользователя: ");
+                String fName = br.readLine();
+                System.out.println(userController.getByFirstName(fName));
+                searchUserMenu();
             }
             case 3: {
+                System.out.print("Введите Фамилию пользователя: ");
+                String lName = br.readLine();
+                System.out.println(userController.getByLastName(lName));
+                searchUserMenu();
             }
             case 4: {
+                System.out.print("Введите Имя и Фамилию пользователя: ");
+                String fName = br.readLine();
+                String lName = br.readLine();
+                System.out.println(userController.getByFirstAndLastNames(fName, lName));
+                searchUserMenu();
             }
             case 5: {
+                System.out.print("Введите Контент пользователя: ");
+                String content = br.readLine();
+                System.out.println(userController.getByContent(content));
+                searchUserMenu();
             }
             case 6: {
+                System.out.print("Введите Регион пользователя: ");
+                String region = br.readLine();
+                System.out.println(userController.getByRegion(region));
+                searchUserMenu();
+            }
+            case 7: {
                 showMainMenu();
             }
             case 0: {
@@ -144,14 +175,67 @@ public final class UserMenu {
         }
     }
 
-    public void removeUserMenu(){
+    public void removeUserMenu() throws IOException {
         System.out.println("Меню удаления пользователя.");
         System.out.println("Введите id пользователя для удаления.");
+        int id = -1;
+        try {
+            id = Integer.parseInt(br.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        int removeUserId = InputFilter.matchMenuNumber();
+        if(id == -1){
+            return;
+        }
+
+        userController.remove(Long.valueOf(id));
     }
 
-    public void updateUserMenu(){
+    public void updateUserMenu() {
+        
+    }
 
+
+    private int matchMenuNumber(){
+        int select = -1;
+
+        try {
+            System.out.print("Выберите пункт меню: ");
+            String input = br.readLine();
+
+            while (!input.matches("[0-9]")){
+                System.out.println("Ошибка ввода, попробуйте еще раз.");
+                System.out.print("Выберите пункт меню: ");
+                input = br.readLine();
+            }
+
+            try {
+                select = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("Ошибка!!! Не могу спарсить число!");
+            }
+
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return select;
+    }
+
+    private boolean matchName(String name){
+        if(name.matches("[A-zА-я]+")){
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean matchRegion(String region){
+        if(region.matches("[A-я\\s]+")){
+            return true;
+        }
+
+        return false;
     }
 }

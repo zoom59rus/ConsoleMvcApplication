@@ -1,6 +1,7 @@
-package main.java.com.zoom59rus.javacore.chapter13.model;
+package com.zoom59rus.javacore.chapter13.model;
 
 import lombok.*;
+import lombok.EqualsAndHashCode.Exclude;
 
 import java.util.List;
 
@@ -10,9 +11,13 @@ import java.util.List;
 @EqualsAndHashCode
 @ToString
 public class User{
+    @Exclude
     private Long id;
+
     private String firstName;
     private String lastName;
-    private List<Post> posts;
+    @Exclude
+    private List<Long> postsId;
+
     private Region region;
 }
