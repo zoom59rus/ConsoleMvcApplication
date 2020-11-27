@@ -1,6 +1,5 @@
 package com.zoom59rus.javacore.chapter13.view;
 
-import com.zoom59rus.javacore.chapter13.InputFilter;
 import com.zoom59rus.javacore.chapter13.controller.UserController;
 import com.zoom59rus.javacore.chapter13.model.Post;
 import com.zoom59rus.javacore.chapter13.model.Region;
