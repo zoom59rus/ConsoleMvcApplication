@@ -72,7 +72,7 @@ public final class UserMenu {
         try {
             System.out.print("Введите имя: ");
             String firstName = br.readLine();
-            while (matchName(firstName)) {
+            while (!matchName(firstName)) {
                 System.out.println("Вы ошиблись в написании имени, попробуйте еще раз.");
                 System.out.print("Введите имя: ");
                 firstName = br.readLine();
@@ -80,7 +80,7 @@ public final class UserMenu {
 
             System.out.print("Введите фамилию: ");
             String lastName = br.readLine();
-            while (matchName(lastName)) {
+            while (!matchName(lastName)) {
                 System.out.println("Вы ошиблись в написании фамилии, попробуйте еще раз.");
                 System.out.print("Введите фамилию: ");
                 lastName = br.readLine();
@@ -97,7 +97,7 @@ public final class UserMenu {
 
             System.out.print("Введите регион: ");
             String r = br.readLine();
-            while (matchRegion(r)) {
+            while (!matchRegion(r)) {
                 System.out.println("Вы ошиблись в написании региона, попробуйте еще раз.");
                 System.out.print("Введите регион: ");
                 r = br.readLine();
@@ -193,7 +193,7 @@ public final class UserMenu {
     }
 
     public void updateUserMenu() {
-        
+
     }
 
 

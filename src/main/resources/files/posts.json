@@ -1,50 +1,32 @@
 [
   {
     "id": 1,
-    "content": "d",
-    "created": "Nov 26, 2020 1:15:49 PM",
-    "updated": "Nov 26, 2020 1:15:49 PM"
+    "content": "Я пишу консольное приложение",
+    "created": "Nov 27, 2020 11:01:50 AM",
+    "updated": "Nov 27, 2020 11:01:50 AM"
   },
   {
     "id": 2,
-    "content": "f",
-    "created": "Nov 26, 2020 1:15:49 PM",
-    "updated": "Nov 26, 2020 1:15:49 PM"
+    "content": "Реализовал меню пользователя",
+    "created": "Nov 27, 2020 11:02:05 AM",
+    "updated": "Nov 27, 2020 11:02:05 AM"
   },
   {
     "id": 3,
-    "content": "g",
-    "created": "Nov 26, 2020 1:15:50 PM",
-    "updated": "Nov 26, 2020 1:15:50 PM"
+    "content": "Реализовал слой репо",
+    "created": "Nov 27, 2020 11:02:13 AM",
+    "updated": "Nov 27, 2020 11:02:13 AM"
   },
   {
     "id": 4,
-    "content": "e",
-    "created": "Nov 26, 2020 1:17:25 PM",
-    "updated": "Nov 26, 2020 1:17:25 PM"
+    "content": "Реализовал слой контроллеров",
+    "created": "Nov 27, 2020 11:02:20 AM",
+    "updated": "Nov 27, 2020 11:02:20 AM"
   },
   {
     "id": 5,
-    "content": "r",
-    "created": "Nov 26, 2020 1:17:25 PM",
-    "updated": "Nov 26, 2020 1:17:25 PM"
-  },
-  {
-    "id": 6,
-    "content": "t",
-    "created": "Nov 26, 2020 1:17:26 PM",
-    "updated": "Nov 26, 2020 1:17:26 PM"
-  },
-  {
-    "id": 7,
-    "content": "g",
-    "created": "Nov 26, 2020 1:17:51 PM",
-    "updated": "Nov 26, 2020 1:17:51 PM"
-  },
-  {
-    "id": 8,
-    "content": "h",
-    "created": "Nov 26, 2020 1:17:51 PM",
-    "updated": "Nov 26, 2020 1:17:51 PM"
+    "content": "Осталось реализовать редактирование пользователя",
+    "created": "Nov 27, 2020 11:02:37 AM",
+    "updated": "Nov 27, 2020 11:02:37 AM"
   }
 ]
