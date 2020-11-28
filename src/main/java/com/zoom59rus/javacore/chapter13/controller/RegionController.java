@@ -15,19 +15,26 @@ public final class RegionController {
     }
 
     public Region save(Region region) throws IOException {
-        return regionRepository.save(region);
+        Region persist = regionRepository.save(region);
+
+        if(persist == null){
+            System.err.println("Регион " + region + " не сохранен.");
+            return null;
+        }
+
+        return persist;
     }
 
-    public void saveAll(List<Region> regionList) throws IOException {
-        regionRepository.saveAll(regionList);
+    public List<Region> saveAll(List<Region> regionList) throws IOException {
+        return regionRepository.saveAll(regionList);
     }
 
-    public Region getOne(Long id) throws IOException {
-        return regionRepository.get(id);
+    public Region get(Long id) throws IOException {
+        return regionRepository.get(id).orElse(null);
     }
 
-    public Region getFirst(String name) throws IOException {
-        return regionRepository.get(name);
+    public Region get(String name) throws IOException {
+        return regionRepository.get(name).orElse(null);
     }
 
     public List<Region> getAll() throws IOException {
@@ -35,6 +42,8 @@ public final class RegionController {
     }
 
     public void remove(Long id) throws IOException {
-        regionRepository.remove(id);
+        if(regionRepository.remove(id)){
+            System.out.println("Регион с id:" + id + " удален.");
+        }else System.out.println("Регион с id:" + id + " не найден, или не получилось удалить.");
     }
 }

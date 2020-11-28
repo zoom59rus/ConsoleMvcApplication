@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.zoom59rus.javacore.chapter13.model.Post;
+import com.zoom59rus.javacore.chapter13.model.Region;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
@@ -11,15 +12,20 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class JavaIOPostRepositoryImpl implements PostRepository{
-    private static final String path = "/Users/anton/JavaDev/ConsoleMvcApplication/src/main/resources/files/posts.json";
-    private static Gson gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
+    private final String sourcePath;
+    private final Gson gson;
+    private final Type objectsType;
     private volatile AtomicLong id;
 
-    public JavaIOPostRepositoryImpl() {
+    public JavaIOPostRepositoryImpl(){
+        this.sourcePath = "src/main/resources/files/posts.json";
+        this.gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
+        this.objectsType = new TypeToken<List<Post>>(){}.getType();
     }
 
     private AtomicLong getNextId() throws IOException {
@@ -60,10 +66,9 @@ public class JavaIOPostRepositoryImpl implements PostRepository{
         post.setId(getId());
         postList.add(post);
 
-        Type list = new TypeToken<List<Post>>(){}.getType();
-        String json = gson.toJson(postList, list);
+        String json = gson.toJson(postList, objectsType);
 
-        try(FileWriter fw = new FileWriter(path)){
+        try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
         }
         return post;
@@ -84,10 +89,9 @@ public class JavaIOPostRepositoryImpl implements PostRepository{
         List<Post> postList = getAll();
         postList.addAll(lists);
 
-        Type list = new TypeToken<List<Post>>(){}.getType();
-        String json = gson.toJson(postList, list);
+        String json = gson.toJson(postList, objectsType);
 
-        try(FileWriter fw = new FileWriter(path)){
+        try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
         }
 
@@ -95,28 +99,25 @@ public class JavaIOPostRepositoryImpl implements PostRepository{
     }
 
     @Override
-    public Post get(Long id) throws IOException {
+    public Optional<Post> get(Long id) throws IOException {
 
         return getAll().stream()
                 .filter(p -> p.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     @Override
-    public Post get(String content) throws IOException {
+    public Optional<Post> get(String content) throws IOException {
 
         return getAll().stream()
                 .filter(p -> p.getContent().equals(content))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     @Override
     public List<Post> getAll() throws IOException {
         String json = loadFileData();
-        Type list = new TypeToken<List<Post>>(){}.getType();
-        List<Post> postList = gson.fromJson(json, list);
+        List<Post> postList = gson.fromJson(json, objectsType);
         if(postList == null){
             return new ArrayList<>();
         }
@@ -128,7 +129,7 @@ public class JavaIOPostRepositoryImpl implements PostRepository{
     public List<Post> getPostListByIds(List<Long> postIds){
         List<Post> p = postIds.stream().map(post -> {
             try {
-                return get(post);
+                return get(post).orElse(null);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -138,26 +139,26 @@ public class JavaIOPostRepositoryImpl implements PostRepository{
     }
 
     @Override
-    public void remove(Long id) throws IOException {
+    public boolean remove(Long id) throws IOException {
         List<Post> postList = getAll();
         if(postList.isEmpty()){
-            return;
+            return false;
         }
 
         postList = postList.stream()
                 .filter(p -> !p.getId().equals(id))
                 .collect(Collectors.toList());
 
-        Type list = new TypeToken<List<Post>>(){}.getType();
-        String json = gson.toJson(postList, list);
-        try(FileWriter fw = new FileWriter(path)){
+        String json = gson.toJson(postList, objectsType);
+        try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
         }
 
+        return true;
     }
 
     private String loadFileData() throws IOException {
-        try(InputStream is = new FileInputStream(path)){
+        try(InputStream is = new FileInputStream(sourcePath)){
             return IOUtils.toString(is, StandardCharsets.UTF_8);
         }
     }

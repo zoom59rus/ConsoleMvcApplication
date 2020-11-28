@@ -9,6 +9,7 @@ import com.zoom59rus.javacore.chapter13.repository.user.UserRepository;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class UserController {
@@ -35,15 +36,16 @@ public class UserController {
     }
 
     public UserDto getById(Long id) throws IOException {
-        User u = userRepository.getById(id);
-
-        return UserDto.fromUser(u, postController.getPostListByIds(u.getPostsId()));
+        Optional<User> u = userRepository.getById(id);
+        return u.map(user -> UserDto.fromUser(user, postController.getPostListByIds(user.getPostsId())))
+                .orElse(null);
     }
 
     public UserDto getByFirstName(String firstName) throws IOException {
-        User u = userRepository.getUserByFirstName(firstName);
+        Optional<User> u = userRepository.getUserByFirstName(firstName);
 
-        return UserDto.fromUser(u, postController.getPostListByIds(u.getPostsId()));
+        return u.map(user -> UserDto.fromUser(user, postController.getPostListByIds(user.getPostsId())))
+                .orElse(null);
     }
 
     public UserDto getByLastName(String lastName) throws IOException {
@@ -59,26 +61,43 @@ public class UserController {
     }
 
     public UserDto getByContent(String content) throws IOException {
-        Post p = postController.getFirstContent(content);
-        User u = userRepository.getUsersByPost(p.getId());
+        Post p = postController.get(content);
+        if(p != null){
+            User u = userRepository.getUsersByPost(p.getId()).orElse(null);
+            if(u != null){
+                return UserDto.fromUser(u, postController.getPostListByIds(u.getPostsId()));
+            }
+        }
 
-        return UserDto.fromUser(u, postController.getPostListByIds(u.getPostsId()));
+        return null;
     }
 
-    public UserDto getByRegion(String region) throws IOException {
-        User u = userRepository.getUsersByRegion(region).stream().findFirst().orElse(null);
-        if(u == null){
+    public List<UserDto> getUsersByRegion(String region) throws IOException {
+        List<User> u = userRepository.getUsersByRegion(region);
+        if(u.isEmpty()){
             return null;
         }
 
-        return UserDto.fromUser(u, postController.getPostListByIds(u.getPostsId()));
+        List<UserDto> list = u.stream()
+                .map(user -> UserDto.fromUser(user, postController.getPostListByIds(user.getPostsId())))
+                .collect(Collectors.toList());
+
+        return list;
     }
 
-    public void remove(Long id) throws IOException{
-        userRepository.remove(id);
+    public boolean remove(Long id) throws IOException{
+        return userRepository.remove(id);
     }
 
-    public void update(UserDto userDto){
+    public void update(UserDto userDto) throws IOException {
+        List<Post> postList = postController.saveAll(userDto.getPosts());
+        List<Long> postsId = (postList.stream()
+                .map(Post::getId)
+                .collect(Collectors.toList()));
 
+        User u = UserDto.fromUserDto(userDto, postsId);
+        u.setId(userDto.getId());
+
+        userRepository.updateUser(u);
     }
 }

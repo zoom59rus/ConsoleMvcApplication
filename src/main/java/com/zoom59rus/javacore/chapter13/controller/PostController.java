@@ -22,11 +22,11 @@ public class PostController {
     }
 
     public Post get(Long id) throws IOException {
-        return postRepository.get(id);
+        return postRepository.get(id).orElse(null);
     }
 
-    public Post getFirstContent(String content) throws IOException {
-        return postRepository.get(content);
+    public Post get(String content) throws IOException {
+        return postRepository.get(content).orElse(null);
     }
 
     public List<Post> getAll() throws IOException {

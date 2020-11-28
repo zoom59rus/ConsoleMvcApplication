@@ -11,7 +11,7 @@ import java.util.List;
 @EqualsAndHashCode
 @ToString
 public class User{
-    @Exclude
+    @EqualsAndHashCode.Exclude
     private Long id;
 
     private String firstName;

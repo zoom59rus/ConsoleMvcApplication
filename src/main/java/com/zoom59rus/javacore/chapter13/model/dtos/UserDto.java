@@ -7,13 +7,14 @@ import lombok.*;
 import lombok.EqualsAndHashCode.Exclude;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @EqualsAndHashCode
-@ToString
 public class UserDto {
+
     @Exclude
     private Long id;
 
@@ -30,5 +31,25 @@ public class UserDto {
 
     public static User fromUserDto(UserDto userDto, List<Long> postsId){
         return new User(null, userDto.getFirstName(), userDto.getLastName(), postsId, userDto.getRegion());
+    }
+
+    public String postsToString(){
+        StringBuilder sb = new StringBuilder();
+        AtomicInteger count = new AtomicInteger(1);
+        posts.forEach(p -> sb.append("\t\t")
+                                .append(count.getAndIncrement())
+                                .append(". ")
+                                .append(p.getContent())
+                                .append("\n"));
+
+        return sb.toString();
+    }
+
+
+    public String toString(){
+        return "Имя: " + firstName + "\n" +
+                "Фамилия: " + lastName + "\n" +
+                "Регион: " + region.getName() + "\n" +
+                "Контент: \n" + postsToString();
     }
 }

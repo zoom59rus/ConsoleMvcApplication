@@ -11,15 +11,20 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class JavaIOUserRepositoryImpl implements UserRepository {
-    private static final String path = "/Users/anton/JavaDev/ConsoleMvcApplication/src/main/resources/files/users.json";
-    private static Gson gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
-    private static AtomicLong id;
+    private final String sourcePath;
+    private final Gson gson;
+    private final Type objectsType;
+    private volatile AtomicLong id;
 
-    public JavaIOUserRepositoryImpl() {
+    public JavaIOUserRepositoryImpl(){
+        this.sourcePath = "src/main/resources/files/users.json";
+        this.gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
+        this.objectsType = new TypeToken<List<User>>(){}.getType();
     }
 
     private AtomicLong getNextId() throws IOException {
@@ -53,10 +58,9 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
         user.setId(getId());
         userList.add(user);
 
-        Type list = new TypeToken<List<User>>(){}.getType();
-        String json = gson.toJson(userList, list);
+        String json = gson.toJson(userList, objectsType);
 
-        try(FileWriter fw = new FileWriter(path)){
+        try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
         }
 
@@ -66,13 +70,13 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
     @Override
     public void updateUser(User user) throws IOException {
         remove(user.getId());
+
         List<User> u = getAll();
         u.add(user);
 
-        Type list = new TypeToken<List<User>>(){}.getType();
-        String json = gson.toJson(u, list);
+        String json = gson.toJson(u, objectsType);
 
-        try(FileWriter fw = new FileWriter(path)){
+        try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
         }
     }
@@ -92,10 +96,9 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
         List<User> userList = getAll();
         userList.addAll(persistUserList);
 
-        Type list = new TypeToken<List<User>>(){}.getType();
-        String json = gson.toJson(userList, list);
+        String json = gson.toJson(userList, objectsType);
 
-        try(FileWriter fw = new FileWriter(path)){
+        try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
         }
 
@@ -103,28 +106,33 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User get(Long id) throws IOException {
-        return getAll().stream()
-                .filter(u -> u.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+    public Optional<User> get(Long id){
+        Optional<User> user = null;
+        try {
+            user = getAll().stream()
+                    .filter(u -> u.getId() == id)
+                    .findAny();
+        } catch (IOException e) {
+            System.err.print(e.getMessage());
+        }
+
+        return user;
     }
 
     @Override
-    public User get(String name) throws IOException {
+    public Optional<User> get(String name) throws IOException {
         return getAll().stream()
                 .filter(u -> u.getFirstName().equals(name))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     @Override
-    public User getById(Long id) throws IOException {
+    public Optional<User> getById(Long id) throws IOException {
         return get(id);
     }
 
     @Override
-    public User getUserByFirstName(String firsName) throws IOException {
+    public Optional<User> getUserByFirstName(String firsName) throws IOException {
         return get(firsName);
     }
 
@@ -154,11 +162,10 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User getUsersByPost(Long postId) throws IOException {
+    public Optional<User> getUsersByPost(Long postId) throws IOException {
         return getAll().stream()
                 .filter(u -> u.getPostsId().contains(postId))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     @Override
@@ -184,8 +191,7 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
 
     @Override
     public List<User> getAll() throws IOException {
-        Type list = new TypeToken<List<User>>(){}.getType();
-        List<User> userList = gson.fromJson(loadFromData(), list);
+        List<User> userList = gson.fromJson(loadFromData(), objectsType);
         if(userList == null){
             return new ArrayList<>();
         }
@@ -194,29 +200,26 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void remove(Long id) throws IOException {
+    public boolean remove(Long id) throws IOException {
         List<User> userList = getAll();
         if(userList.isEmpty()){
-            return;
-        }
-        if(!userList.contains(get(id))){
-            return;
+            return false;
         }
 
         userList = userList.stream()
                 .filter(u -> !u.getId().equals(id))
                 .collect(Collectors.toList());
 
-        Type list = new TypeToken<List<User>>(){}.getType();
-        String json = gson.toJson(userList, list);
-        try(FileWriter fw = new FileWriter(path)){
+        String json = gson.toJson(userList, objectsType);
+        try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
         }
 
+        return true;
     }
 
     private String loadFromData() throws IOException{
-        try(InputStream is = new FileInputStream(path)){
+        try(InputStream is = new FileInputStream(sourcePath)){
             return IOUtils.toString(is, StandardCharsets.UTF_8);
         }
     }

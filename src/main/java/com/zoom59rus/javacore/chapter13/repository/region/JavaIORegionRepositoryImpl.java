@@ -12,15 +12,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class JavaIORegionRepositoryImpl implements RegionRepository{
-    private static final String path = "/Users/anton/JavaDev/ConsoleMvcApplication/src/main/resources/files/regions.json";
-    private static Gson gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
+    private final String sourcePath;
+    private final Gson gson;
+    private final Type regionsType;
     private volatile AtomicLong id;
 
     public JavaIORegionRepositoryImpl(){
+        this.sourcePath = "src/main/resources/files/regions.json";
+        this.gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
+        this.regionsType = new TypeToken<List<Region>>(){}.getType();
     }
 
     private AtomicLong getNextId() throws IOException {
@@ -52,20 +57,19 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
     @Override
     public Region save(Region region)throws IOException {
         List<Region> regionList = getAll();
+
         if(regionList.contains(region)){
             return regionList.stream()
                     .filter(r -> r.equals(region))
-                    .findFirst()
-                    .orElse(region);
+                    .findAny()
+                    .orElse(null);
         }
 
         region.setId(getId());
         regionList.add(region);
+        String json = gson.toJson(regionList, regionsType);
 
-        Type type = new TypeToken<List<Region>>(){}.getType();
-        String json = gson.toJson(regionList, type);
-
-        try(FileWriter fWriter = new FileWriter(path)){
+        try(FileWriter fWriter = new FileWriter(sourcePath)){
             fWriter.write(json);
         }
 
@@ -73,46 +77,50 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
     }
 
     @Override
-    public Region get(Long id) throws IOException {
+    public Optional<Region> get(Long id) throws IOException {
 
         return getAll().stream()
                 .filter(r -> r.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+                .findAny();
     }
 
     @Override
-    public Region get(String name) throws IOException {
+    public Optional<Region> get(String name) throws IOException {
 
         return getAll().stream()
                 .filter(r -> r.getName().equals(name))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     @Override
-    public void remove(Long id) throws IOException {
+    public boolean remove(Long id) throws IOException {
         List<Region> regionList = getAll();
+        int currentSize = regionList.size();
         if(regionList.isEmpty()){
-            return;
+            return false;
         }
 
-        regionList = regionList.stream().filter(r -> !r.getId().equals(id)).collect(Collectors.toList());
-        Type type = new TypeToken<List<Region>>(){}.getType();
-        String jsons = gson.toJson(regionList, type);
+        regionList = regionList.stream()
+                .filter(r -> !r.getId().equals(id))
+                .collect(Collectors.toList());
 
-        try(FileWriter fWriter = new FileWriter(path)){
+        if(currentSize == regionList.size()){
+            return false;
+        }
+        String jsons = gson.toJson(regionList, regionsType);
+
+        try(FileWriter fWriter = new FileWriter(sourcePath)){
             fWriter.write(jsons);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
+
+        return true;
     }
 
     @Override
     public List<Region> saveAll(List<Region> regionList) throws IOException{
-        List<Region> getRegionList = getAll();
+        List<Region> regions = getAll();
 
         regionList = regionList.stream()
                 .peek(r -> {
@@ -124,14 +132,11 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
                 })
                 .collect(Collectors.toList());
 
-        getRegionList.addAll(regionList);
+        regions.addAll(regionList);
 
-        try (FileWriter fileWriter = new FileWriter(path);
+        try (FileWriter fileWriter = new FileWriter(sourcePath)
         ) {
-            Type list = new TypeToken<List<Region>>(){}.getType();
-            fileWriter.write(gson.toJson(regionList, list));
-        } catch (IOException e) {
-            e.printStackTrace();
+            fileWriter.write(gson.toJson(regionList, regionsType));
         }
 
         return regionList;
@@ -139,8 +144,7 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
 
     @Override
     public List<Region> getAll() throws IOException {
-        Type listType = new TypeToken<List<Region>>(){}.getType();
-        List<Region> regionList = gson.fromJson(loadFileData(), listType);
+        List<Region> regionList = gson.fromJson(loadFileData(), regionsType);
         if(regionList == null){
             return new ArrayList<>();
         }
@@ -149,7 +153,7 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
     }
 
     private String loadFileData() throws IOException{
-        try(InputStream is = new FileInputStream(path)){
+        try(InputStream is = new FileInputStream(sourcePath)){
             return IOUtils.toString(is, StandardCharsets.UTF_8);
         }
     }

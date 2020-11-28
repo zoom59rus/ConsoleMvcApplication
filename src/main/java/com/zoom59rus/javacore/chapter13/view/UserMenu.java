@@ -17,18 +17,24 @@ public final class UserMenu {
     private UserController userController;
     private BufferedReader br;
 
-    private UserMenu() throws IOException {
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
+
+    private UserMenu(){
         userController = new UserController();
         this.br = new BufferedReader(new InputStreamReader(System.in));
     }
 
     public static UserMenu getInstance() {
         if (userMenu == null) {
-            try {
-                userMenu = new UserMenu();
-            } catch (IOException e) {
-                System.err.print(e.getMessage());
-            }
+            userMenu = new UserMenu();
         }
 
         return userMenu;
@@ -72,7 +78,7 @@ public final class UserMenu {
             System.out.print("Введите имя: ");
             String firstName = br.readLine();
             while (!matchName(firstName)) {
-                System.out.println("Вы ошиблись в написании имени, попробуйте еще раз.");
+                System.err.println("Вы ошиблись в написании имени, попробуйте еще раз.");
                 System.out.print("Введите имя: ");
                 firstName = br.readLine();
             }
@@ -80,7 +86,7 @@ public final class UserMenu {
             System.out.print("Введите фамилию: ");
             String lastName = br.readLine();
             while (!matchName(lastName)) {
-                System.out.println("Вы ошиблись в написании фамилии, попробуйте еще раз.");
+                System.err.println("Вы ошиблись в написании фамилии, попробуйте еще раз.");
                 System.out.print("Введите фамилию: ");
                 lastName = br.readLine();
             }
@@ -97,13 +103,19 @@ public final class UserMenu {
             System.out.print("Введите регион: ");
             String r = br.readLine();
             while (!matchRegion(r)) {
-                System.out.println("Вы ошиблись в написании региона, попробуйте еще раз.");
+                System.err.print("Вы ошиблись в написании региона, попробуйте еще раз.");
                 System.out.print("Введите регион: ");
                 r = br.readLine();
             }
             Region region = new Region(null, r);
-
-            userController.save(new UserDto(null, firstName, lastName, postList, region));
+            UserDto userDto = new UserDto(null, firstName, lastName, postList, region);
+            System.out.println(ANSI_GREEN + userDto + ANSI_RESET);
+            System.out.print("Сохранить пользователя? Y/N: ");
+            String s = br.readLine();
+            if("y".equals(s.toLowerCase())){
+                userController.save(userDto);
+                System.out.println("Пользователь сохранен.");
+            }
 
             showMainMenu();
         } catch (IOException e) {
@@ -126,39 +138,75 @@ public final class UserMenu {
         switch (matchMenuNumber()) {
             case 1: {
                 System.out.print("Введите id пользователя: ");
-                Long id = Long.parseLong(br.readLine());
-                System.out.println(userController.getById(id));
+                String idString = br.readLine();
+                while (!matchId(idString)){
+                    idString = br.readLine();
+                }
+                Long id = Long.parseLong(idString);
+                UserDto result = userController.getById(id);
+                if(result != null) {
+                    System.out.println(ANSI_GREEN + result + ANSI_RESET);
+                } else System.out.println(ANSI_GREEN + "Пользователь с id:" + id + " не найден" + ANSI_RESET);
+
+                sleep();
                 searchUserMenu();
             }
             case 2: {
                 System.out.print("Введите Имя пользователя: ");
-                String fName = br.readLine();
-                System.out.println(userController.getByFirstName(fName));
+                String fName = getInputName();
+                UserDto result = userController.getByFirstName(fName);
+                if(result != null){
+                    System.out.println(ANSI_GREEN + result + ANSI_RESET);
+                }else System.out.println(ANSI_GREEN + "Пользователь с именем:" + fName + " не найден" + ANSI_RESET);
+
+                sleep();
                 searchUserMenu();
             }
             case 3: {
                 System.out.print("Введите Фамилию пользователя: ");
-                String lName = br.readLine();
-                System.out.println(userController.getByLastName(lName));
+                String lName = getInputName();
+                UserDto result = userController.getByLastName(lName);
+                if(result != null){
+                    System.out.println(ANSI_GREEN + result + ANSI_RESET);
+                }else System.out.println(ANSI_GREEN + "Пользователь с фамилией:" + lName + " не найден" + ANSI_RESET);
+
+                sleep();
                 searchUserMenu();
             }
             case 4: {
-                System.out.print("Введите Имя и Фамилию пользователя: ");
-                String fName = br.readLine();
-                String lName = br.readLine();
-                System.out.println(userController.getByFirstAndLastNames(fName, lName));
+                System.out.println("Введите Имя и Фамилию пользователя:");
+                System.out.print("Введите имя: ");
+                String fName = getInputName();
+                System.out.print("Введите фамилию: ");
+                String lName = getInputName();
+                UserDto result = userController.getByFirstAndLastNames(fName, lName);
+                if(result != null){
+                    System.out.println(ANSI_GREEN + result + ANSI_RESET);
+                }else System.out.println(ANSI_GREEN + "Пользователь " + fName + " " + lName + " не найден" + ANSI_RESET);
+
+                sleep();
                 searchUserMenu();
             }
             case 5: {
                 System.out.print("Введите Контент пользователя: ");
                 String content = br.readLine();
-                System.out.println(userController.getByContent(content));
+                UserDto result = userController.getByContent(content);
+                if(result != null){
+                    System.out.println(ANSI_GREEN + result + ANSI_RESET);
+                }else System.out.println(ANSI_GREEN + "Пользователь с контентом " + content + " не найден" + ANSI_RESET);
+
+                sleep();
                 searchUserMenu();
             }
             case 6: {
                 System.out.print("Введите Регион пользователя: ");
-                String region = br.readLine();
-                System.out.println(userController.getByRegion(region));
+                String region = getInputRegion();
+                List<UserDto> result = userController.getUsersByRegion(region);
+                if(result != null){
+                    result.forEach(r -> System.out.println(ANSI_GREEN + r + ANSI_RESET));
+                }else System.out.println(ANSI_GREEN + "Пользователь с регионом " + region + " не найден" + ANSI_RESET);
+
+                sleep();
                 searchUserMenu();
             }
             case 7: {
@@ -169,29 +217,102 @@ public final class UserMenu {
             }
             default: {
                 System.out.println("Выбран не существующий пункт меню.");
-                showMainMenu();
+                searchUserMenu();
             }
         }
     }
 
     public void removeUserMenu() throws IOException {
-        System.out.println("Меню удаления пользователя.");
-        System.out.println("Введите id пользователя для удаления.");
-        int id = -1;
-        try {
-            id = Integer.parseInt(br.readLine());
-        } catch (IOException e) {
-            e.printStackTrace();
+        System.out.print("Введите id пользователя: ");
+        String idString = br.readLine();
+        while (!matchId(idString)){
+            idString = br.readLine();
+        }
+        Long id = Long.parseLong(idString);
+        UserDto userDto = userController.getById(id);
+        if(userDto == null){
+            System.out.println(ANSI_GREEN + "Пользователь с id:" + id + " не найден." + ANSI_RESET);
+            showMainMenu();
+        }
+        System.out.println(ANSI_GREEN + userDto + ANSI_RESET);
+        System.out.print(ANSI_RED + "Пользователь будет удален, подтвердите (Y/N): " + ANSI_RESET);
+        String input = br.readLine();
+        if("y".equals(input.toLowerCase())){
+            if(userController.remove(id)) {
+                System.out.println(ANSI_GREEN + "Пользователь удален." + ANSI_RESET);
+            }else System.err.println("Невозможно удалить пользователя с id:" + id + ", или пользователь не существует.");
         }
 
-        if(id == -1){
-            return;
-        }
-
-        userController.remove(Long.valueOf(id));
+        showMainMenu();
     }
 
-    public void updateUserMenu() {
+    public void updateUserMenu() throws IOException {
+        System.out.println("Меню редактирования пользователя.");
+        System.out.print("Введите id пользователя для редактирования: ");
+        String idString = br.readLine();
+        while (!matchId(idString)){
+            idString = br.readLine();
+        }
+        Long id = Long.parseLong(idString);
+
+        UserDto updateUser = userController.getById(id);
+        if(updateUser == null){
+            System.out.println(ANSI_GREEN + "Пользователь с id:" + id + " не найден." + ANSI_RESET);
+            showMainMenu();
+        }
+
+        System.out.println("Редактируемый пользователь:");
+        System.out.println(ANSI_GREEN + updateUser + ANSI_RESET);
+
+        try {
+            System.out.print("Введите имя: ");
+            String firstName = br.readLine();
+            while (!matchName(firstName)) {
+                System.err.print("Вы ошиблись в написании имени, попробуйте еще раз.");
+                System.out.print("Введите имя: ");
+                firstName = br.readLine();
+            }
+
+            System.out.print("Введите фамилию: ");
+            String lastName = br.readLine();
+            while (!matchName(lastName)) {
+                System.err.print("Вы ошиблись в написании фамилии, попробуйте еще раз.");
+                System.out.print("Введите фамилию: ");
+                lastName = br.readLine();
+            }
+
+            System.out.println("Введите публикацию(и): ");
+            List<Post> postList = new ArrayList<>();
+            System.out.print("Введите публикацию №" + (postList.size() + 1) + ": ");
+            String content;
+            while (!(content = br.readLine()).equals("")) {
+                postList.add(new Post(null, content, new Date()));
+                System.out.print("Введите публикацию №" + (postList.size() + 1) + ": ");
+            }
+
+            System.out.print("Введите регион: ");
+            String r = br.readLine();
+            while (!matchRegion(r)) {
+                System.err.print("Вы ошиблись в написании региона, попробуйте еще раз.");
+                System.out.print("Введите регион: ");
+                r = br.readLine();
+            }
+            Region region = new Region(null, r);
+            UserDto userDto = new UserDto(id, firstName, lastName, postList, region);
+            System.out.println(ANSI_GREEN + userDto + ANSI_RESET);
+
+            System.out.print("Сохранить изменения пользователя? Y/N: ");
+            String s = br.readLine();
+            if("y".equals(s.toLowerCase())){
+                userController.update(userDto);
+                System.out.println("Пользователь сохранен.");
+            }
+
+
+            showMainMenu();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
 
     }
 
@@ -236,5 +357,56 @@ public final class UserMenu {
         }
 
         return false;
+    }
+
+    private boolean matchId(String idString){
+        try{
+            Long.parseLong(idString);
+            return true;
+        }catch (NumberFormatException e){
+            System.err.println("Неправильный id, попробуйте еще раз.");
+            System.out.print("Введите id пользователя для редактирования: ");
+            return false;
+        }
+    }
+
+    private String getInputName(){
+        try {
+            String name = br.readLine();
+            while (!matchName(name)){
+                System.err.println("Вы ошиблись в написании, попробуйте еще раз.");
+                name = br.readLine();
+            }
+            return name;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private String getInputRegion(){
+        try {
+            String region = br.readLine();
+            while (!matchRegion(region)){
+                System.err.println("Вы ошиблись в написании, попробуйте еще раз.");
+                System.out.print("Введите регион пользователя: ");
+                region = br.readLine();
+            }
+            return region;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private void sleep(){
+        System.out.println("Для продолжения нажмите любую клавишу...");
+        try {
+            br.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

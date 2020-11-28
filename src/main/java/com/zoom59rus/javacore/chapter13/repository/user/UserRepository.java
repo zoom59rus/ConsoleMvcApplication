@@ -5,14 +5,15 @@ import com.zoom59rus.javacore.chapter13.repository.GenericRepository;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 public interface UserRepository extends GenericRepository<User, Long> {
 
-    User getById(Long id) throws IOException;
-    User getUserByFirstName(String firsName) throws IOException;
+    Optional<User> getById(Long id) throws IOException;
+    Optional<User> getUserByFirstName(String firsName) throws IOException;
     User getUserByLastName(String lastName) throws IOException;
     User getUserByFirstAndLastNames(String firstName, String lastName) throws IOException;
-    User getUsersByPost(Long postId) throws IOException;
+    Optional<User> getUsersByPost(Long postId) throws IOException;
 
     List<User> getUsersByName(String firsName) throws IOException;
     List<User> getUsersByLastName(String lastName) throws IOException;
