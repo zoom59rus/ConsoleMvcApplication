@@ -1,31 +1,30 @@
-package com.zoom59rus.javacore.chapter13.repository.region;
+package com.zoom59rus.javacore.chapter13.repository;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.zoom59rus.javacore.chapter13.model.Region;
+import com.zoom59rus.javacore.chapter13.repository.io.RegionRepository;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-public class JavaIORegionRepositoryImpl implements RegionRepository{
+public class JavaIORegionRepositoryImpl implements RegionRepository {
     private final String sourcePath;
     private final Gson gson;
     private final Type regionsType;
     private volatile AtomicLong id;
 
-    public JavaIORegionRepositoryImpl(){
+    public JavaIORegionRepositoryImpl() {
         this.sourcePath = "src/main/resources/files/regions.json";
         this.gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
-        this.regionsType = new TypeToken<List<Region>>(){}.getType();
+        this.regionsType = new TypeToken<List<Region>>() {
+        }.getType();
     }
 
     private AtomicLong getNextId() throws IOException {
@@ -33,12 +32,12 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
 
         List<Region> r = getAll();
 
-        if(r.isEmpty()){
+        if (r.isEmpty()) {
             return id;
         }
 
         for (Region region : Objects.requireNonNull(r)) {
-            if(region.getId() > id.get()){
+            if (region.getId() > id.get()) {
                 id.set(region.getId());
             }
         }
@@ -48,17 +47,17 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
     }
 
     synchronized private Long getId() throws IOException {
-        if(id == null){
+        if (id == null) {
             id = getNextId();
         }
         return id.getAndIncrement();
     }
 
     @Override
-    public Region save(Region region)throws IOException {
+    public Region save(Region region) throws IOException {
         List<Region> regionList = getAll();
 
-        if(regionList.contains(region)){
+        if (regionList.contains(region)) {
             return regionList.stream()
                     .filter(r -> r.equals(region))
                     .findAny()
@@ -69,7 +68,7 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
         regionList.add(region);
         String json = gson.toJson(regionList, regionsType);
 
-        try(FileWriter fWriter = new FileWriter(sourcePath)){
+        try (FileWriter fWriter = new FileWriter(sourcePath)) {
             fWriter.write(json);
         }
 
@@ -96,7 +95,7 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
     public boolean remove(Long id) throws IOException {
         List<Region> regionList = getAll();
         int currentSize = regionList.size();
-        if(regionList.isEmpty()){
+        if (regionList.isEmpty()) {
             return false;
         }
 
@@ -104,12 +103,12 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
                 .filter(r -> !r.getId().equals(id))
                 .collect(Collectors.toList());
 
-        if(currentSize == regionList.size()){
+        if (currentSize == regionList.size()) {
             return false;
         }
         String jsons = gson.toJson(regionList, regionsType);
 
-        try(FileWriter fWriter = new FileWriter(sourcePath)){
+        try (FileWriter fWriter = new FileWriter(sourcePath)) {
             fWriter.write(jsons);
         } catch (FileNotFoundException e) {
             System.err.println(e.getMessage());
@@ -119,10 +118,28 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
     }
 
     @Override
-    public List<Region> saveAll(List<Region> regionList) throws IOException{
+    public Region update(Region region) throws IOException {
+        List<Region> regionList = getAll().stream()
+                .peek(r -> {
+                    if (r.getId() == region.getId()) {
+                        r.setName(region.getName());
+                    }
+                })
+                .collect(Collectors.toList());
+
+        String json = gson.toJson(regionList, regionsType);
+        try (FileWriter fw = new FileWriter(sourcePath)) {
+            fw.write(json);
+            return region;
+        }
+    }
+
+    @Override
+    public List<Region> saveAll(List<Region> regionList) throws IOException {
         List<Region> regions = getAll();
 
         regionList = regionList.stream()
+                .filter(r -> !regions.contains(r))
                 .peek(r -> {
                     try {
                         r.setId(getId());
@@ -132,11 +149,15 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
                 })
                 .collect(Collectors.toList());
 
+        if (regionList.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         regions.addAll(regionList);
 
         try (FileWriter fileWriter = new FileWriter(sourcePath)
         ) {
-            fileWriter.write(gson.toJson(regionList, regionsType));
+            fileWriter.write(gson.toJson(regions, regionsType));
         }
 
         return regionList;
@@ -145,15 +166,21 @@ public class JavaIORegionRepositoryImpl implements RegionRepository{
     @Override
     public List<Region> getAll() throws IOException {
         List<Region> regionList = gson.fromJson(loadFileData(), regionsType);
-        if(regionList == null){
+        if (regionList == null) {
             return new ArrayList<>();
         }
 
         return regionList;
     }
 
-    private String loadFileData() throws IOException{
-        try(InputStream is = new FileInputStream(sourcePath)){
+    public List<Region> search(String name) throws IOException {
+        return getAll().stream()
+                .filter(r -> r.getName().toLowerCase().startsWith(name.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+
+    private String loadFileData() throws IOException {
+        try (InputStream is = new FileInputStream(sourcePath)) {
             return IOUtils.toString(is, StandardCharsets.UTF_8);
         }
     }

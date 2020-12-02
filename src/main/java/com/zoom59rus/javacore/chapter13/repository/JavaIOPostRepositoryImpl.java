@@ -1,10 +1,10 @@
-package com.zoom59rus.javacore.chapter13.repository.post;
+package com.zoom59rus.javacore.chapter13.repository;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.zoom59rus.javacore.chapter13.model.Post;
-import com.zoom59rus.javacore.chapter13.model.Region;
+import com.zoom59rus.javacore.chapter13.repository.io.PostRepository;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-public class JavaIOPostRepositoryImpl implements PostRepository{
+public class JavaIOPostRepositoryImpl implements PostRepository {
     private final String sourcePath;
     private final Gson gson;
     private final Type objectsType;
@@ -155,6 +155,21 @@ public class JavaIOPostRepositoryImpl implements PostRepository{
         }
 
         return true;
+    }
+
+    @Override
+    public Post update(Post post) throws IOException {
+        if(remove(post.getId())){
+            List<Post> postList = getAll();
+            postList.add(post);
+            String json = gson.toJson(postList, objectsType);
+            try(FileWriter fw = new FileWriter(sourcePath)){
+                fw.write(json);
+                return post;
+            }
+        }
+
+        return null;
     }
 
     private String loadFileData() throws IOException {

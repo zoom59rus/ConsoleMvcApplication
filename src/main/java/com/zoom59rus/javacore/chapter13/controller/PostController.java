@@ -1,13 +1,14 @@
 package com.zoom59rus.javacore.chapter13.controller;
 
 import com.zoom59rus.javacore.chapter13.model.Post;
-import com.zoom59rus.javacore.chapter13.repository.post.JavaIOPostRepositoryImpl;
+import com.zoom59rus.javacore.chapter13.repository.JavaIOPostRepositoryImpl;
+import com.zoom59rus.javacore.chapter13.repository.io.PostRepository;
 
 import java.io.IOException;
 import java.util.List;
 
 public class PostController {
-    private final JavaIOPostRepositoryImpl postRepository;
+    private final PostRepository postRepository;
 
     public PostController() {
         this.postRepository = new JavaIOPostRepositoryImpl();

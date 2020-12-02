@@ -11,13 +11,13 @@ import java.util.List;
 @EqualsAndHashCode
 @ToString
 public class User{
-    @EqualsAndHashCode.Exclude
+    @Exclude
     private Long id;
 
     private String firstName;
     private String lastName;
     @Exclude
-    private List<Long> postsId;
+    private List<Post> posts;
 
     private Region region;
 }

@@ -3,7 +3,7 @@ package com.zoom59rus.javacore.chapter13.view;
 import com.zoom59rus.javacore.chapter13.controller.UserController;
 import com.zoom59rus.javacore.chapter13.model.Post;
 import com.zoom59rus.javacore.chapter13.model.Region;
-import com.zoom59rus.javacore.chapter13.model.dtos.UserDto;
+import com.zoom59rus.javacore.chapter13.model.User;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -40,7 +40,7 @@ public final class UserMenu {
         return userMenu;
     }
 
-    public void showMainMenu() throws IOException {
+    public void showMainMenu(){
         System.out.println("Выберите действие:");
         System.out.println();
         System.out.println("[1] Добавить пользователя.");
@@ -54,13 +54,25 @@ public final class UserMenu {
                 menuAddUser();
             }
             case 2: {
-                searchUserMenu();
+                try {
+                    searchUserMenu();
+                } catch (IOException e) {
+                    System.err.println(e.getMessage());
+                }
             }
             case 3: {
-                updateUserMenu();
+                try {
+                    updateUserMenu();
+                } catch (IOException e) {
+                    System.err.println(e.getMessage());
+                }
             }
             case 4: {
-                removeUserMenu();
+                try {
+                    removeUserMenu();
+                } catch (IOException e) {
+                    System.err.println(e.getMessage());
+                }
             }
             case 0: {
                 System.exit(0);
@@ -108,12 +120,12 @@ public final class UserMenu {
                 r = br.readLine();
             }
             Region region = new Region(null, r);
-            UserDto userDto = new UserDto(null, firstName, lastName, postList, region);
-            System.out.println(ANSI_GREEN + userDto + ANSI_RESET);
+            User user = new User(null, firstName, lastName, postList, region);
+            System.out.println(ANSI_GREEN + user + ANSI_RESET);
             System.out.print("Сохранить пользователя? Y/N: ");
             String s = br.readLine();
             if("y".equals(s.toLowerCase())){
-                userController.save(userDto);
+                userController.save(user);
                 System.out.println("Пользователь сохранен.");
             }
 
@@ -143,7 +155,7 @@ public final class UserMenu {
                     idString = br.readLine();
                 }
                 Long id = Long.parseLong(idString);
-                UserDto result = userController.getById(id);
+                User result = userController.getById(id);
                 if(result != null) {
                     System.out.println(ANSI_GREEN + result + ANSI_RESET);
                 } else System.out.println(ANSI_GREEN + "Пользователь с id:" + id + " не найден" + ANSI_RESET);
@@ -154,7 +166,7 @@ public final class UserMenu {
             case 2: {
                 System.out.print("Введите Имя пользователя: ");
                 String fName = getInputName();
-                UserDto result = userController.getByFirstName(fName);
+                User result = userController.getByFirstName(fName);
                 if(result != null){
                     System.out.println(ANSI_GREEN + result + ANSI_RESET);
                 }else System.out.println(ANSI_GREEN + "Пользователь с именем:" + fName + " не найден" + ANSI_RESET);
@@ -165,7 +177,7 @@ public final class UserMenu {
             case 3: {
                 System.out.print("Введите Фамилию пользователя: ");
                 String lName = getInputName();
-                UserDto result = userController.getByLastName(lName);
+                User result = userController.getByLastName(lName);
                 if(result != null){
                     System.out.println(ANSI_GREEN + result + ANSI_RESET);
                 }else System.out.println(ANSI_GREEN + "Пользователь с фамилией:" + lName + " не найден" + ANSI_RESET);
@@ -179,7 +191,7 @@ public final class UserMenu {
                 String fName = getInputName();
                 System.out.print("Введите фамилию: ");
                 String lName = getInputName();
-                UserDto result = userController.getByFirstAndLastNames(fName, lName);
+                User result = userController.getByFirstAndLastNames(fName, lName);
                 if(result != null){
                     System.out.println(ANSI_GREEN + result + ANSI_RESET);
                 }else System.out.println(ANSI_GREEN + "Пользователь " + fName + " " + lName + " не найден" + ANSI_RESET);
@@ -190,7 +202,7 @@ public final class UserMenu {
             case 5: {
                 System.out.print("Введите Контент пользователя: ");
                 String content = br.readLine();
-                UserDto result = userController.getByContent(content);
+                User result = userController.getUsersByPost(content).get(0);
                 if(result != null){
                     System.out.println(ANSI_GREEN + result + ANSI_RESET);
                 }else System.out.println(ANSI_GREEN + "Пользователь с контентом " + content + " не найден" + ANSI_RESET);
@@ -201,7 +213,8 @@ public final class UserMenu {
             case 6: {
                 System.out.print("Введите Регион пользователя: ");
                 String region = getInputRegion();
-                List<UserDto> result = userController.getUsersByRegion(region);
+                List<User> result = userController.getUsersByRegion(region);
+                System.out.println(result);
                 if(result != null){
                     result.forEach(r -> System.out.println(ANSI_GREEN + r + ANSI_RESET));
                 }else System.out.println(ANSI_GREEN + "Пользователь с регионом " + region + " не найден" + ANSI_RESET);
@@ -229,7 +242,7 @@ public final class UserMenu {
             idString = br.readLine();
         }
         Long id = Long.parseLong(idString);
-        UserDto userDto = userController.getById(id);
+        User userDto = userController.getById(id);
         if(userDto == null){
             System.out.println(ANSI_GREEN + "Пользователь с id:" + id + " не найден." + ANSI_RESET);
             showMainMenu();
@@ -255,7 +268,7 @@ public final class UserMenu {
         }
         Long id = Long.parseLong(idString);
 
-        UserDto updateUser = userController.getById(id);
+        User updateUser = userController.getById(id);
         if(updateUser == null){
             System.out.println(ANSI_GREEN + "Пользователь с id:" + id + " не найден." + ANSI_RESET);
             showMainMenu();
@@ -298,7 +311,7 @@ public final class UserMenu {
                 r = br.readLine();
             }
             Region region = new Region(null, r);
-            UserDto userDto = new UserDto(id, firstName, lastName, postList, region);
+            User userDto = new User(id, firstName, lastName, postList, region);
             System.out.println(ANSI_GREEN + userDto + ANSI_RESET);
 
             System.out.print("Сохранить изменения пользователя? Y/N: ");
