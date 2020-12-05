@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode
 @ToString
-public class PersistUser {
+public class UserConverter {
 
     @EqualsAndHashCode.Exclude
     private Long id;
@@ -32,9 +32,9 @@ public class PersistUser {
         return user;
     }
 
-    public PersistUser fromUser(User user, List<Long> postsId, Long regionId){
-        PersistUser persistUser = new PersistUser(user.getId(), user.getFirstName(), user.getLastName(), postsId, regionId);
+    public UserConverter fromUser(User user, List<Long> postsId, Long regionId){
+        UserConverter userConverter = new UserConverter(user.getId(), user.getFirstName(), user.getLastName(), postsId, regionId);
 
-        return persistUser;
+        return userConverter;
     }
 }

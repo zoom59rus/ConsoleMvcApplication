@@ -6,7 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import com.zoom59rus.javacore.chapter13.repository.PostRepository;
 import com.zoom59rus.javacore.chapter13.repository.RegionRepository;
 import com.zoom59rus.javacore.chapter13.repository.UserRepository;
-import com.zoom59rus.javacore.chapter13.repository.converter.PersistUser;
+import com.zoom59rus.javacore.chapter13.repository.converter.UserConverter;
 import com.zoom59rus.javacore.chapter13.model.Post;
 import com.zoom59rus.javacore.chapter13.model.Region;
 import com.zoom59rus.javacore.chapter13.model.User;
@@ -33,7 +33,7 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
     public JavaIOUserRepositoryImpl(){
         this.sourcePath = "src/main/resources/files/users.json";
         this.gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
-        this.objectsType = new TypeToken<List<PersistUser>>(){}.getType();
+        this.objectsType = new TypeToken<List<UserConverter>>(){}.getType();
         this.regionRepository = new JavaIORegionRepositoryImpl();
         this.postRepository = new JavaIOPostRepositoryImpl();
     }
@@ -50,8 +50,8 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
         user.setRegion(regionRepository.save(user.getRegion()));
         savedUserList.add(user);
 
-        List<PersistUser> savePersistUser = fromUserList(savedUserList);
-        String json = gson.toJson(savePersistUser, objectsType);
+        List<UserConverter> saveUserConverter = fromUserList(savedUserList);
+        String json = gson.toJson(saveUserConverter, objectsType);
 
         try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
@@ -79,11 +79,11 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
                 })
                 .collect(Collectors.toList());
 
-        List<PersistUser> persistUsers = lists.stream()
+        List<UserConverter> userConverters = lists.stream()
                 .map(this::fromUser)
                 .collect(Collectors.toList());
 
-        String json = gson.toJson(persistUsers, objectsType);
+        String json = gson.toJson(userConverters, objectsType);
         try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
             return lists;
@@ -122,12 +122,12 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
 
     @Override
     public boolean remove(Long id) throws IOException {
-        List<PersistUser> persistUsers = getAllPersist();
-        if(persistUsers.isEmpty()){
+        List<UserConverter> userConverters = getAllPersist();
+        if(userConverters.isEmpty()){
             return false;
         }
 
-        persistUsers.stream()
+        userConverters.stream()
                 .filter(u -> u.getId().equals(id))
                 .peek(u -> u.getPostsId().forEach(p -> {
                     try {
@@ -138,11 +138,11 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
                 }))
                 .collect(Collectors.toList());
 
-        persistUsers = persistUsers.stream()
+        userConverters = userConverters.stream()
                 .filter(u -> !u.getId().equals(id))
                 .collect(Collectors.toList());
 
-        String json = gson.toJson(persistUsers, objectsType);
+        String json = gson.toJson(userConverters, objectsType);
         try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
             return true;
@@ -161,9 +161,9 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
         List<Post> post = postRepository.saveAll(user.getPosts());
         savedUser.getPosts().addAll(post);
         if(remove(savedUser.getId())){
-            List<PersistUser> savePersistUser = getAllPersist();
-            savePersistUser.add(fromUser(savedUser));
-            String json = gson.toJson(savePersistUser, objectsType);
+            List<UserConverter> saveUserConverter = getAllPersist();
+            saveUserConverter.add(fromUser(savedUser));
+            String json = gson.toJson(saveUserConverter, objectsType);
             try(FileWriter fw = new FileWriter(sourcePath)){
                 fw.write(json);
                 return user;
@@ -254,7 +254,7 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
         if(searchPost.isPresent()){
             Post p = searchPost.get();
             return getAllPersist().stream()
-                    .filter(persistUser -> persistUser.getPostsId().contains(p.getId()))
+                    .filter(userConverter -> userConverter.getPostsId().contains(p.getId()))
                     .map(pos -> {
                         try {
                             return fromPersistUser(pos);
@@ -306,27 +306,27 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
         }
     }
 
-    private List<PersistUser> getAllPersist() throws IOException {
-        List<PersistUser> persistUsers = gson.fromJson(loadFromData(), objectsType);
-        if(persistUsers == null){
+    private List<UserConverter> getAllPersist() throws IOException {
+        List<UserConverter> userConverters = gson.fromJson(loadFromData(), objectsType);
+        if(userConverters == null){
             return new ArrayList<>();
         }
 
-        return persistUsers;
+        return userConverters;
     }
 
-    private User fromPersistUser(PersistUser persistUser) throws IOException {
-        Region region = regionRepository.get(persistUser.getRegionId()).orElse(null);
-        List<Post> postList = postRepository.getPostListByIds(persistUser.getPostsId());
-        return  new User(persistUser.getId(),
-                persistUser.getFirstName(),
-                persistUser.getLastName(),
+    private User fromPersistUser(UserConverter userConverter) throws IOException {
+        Region region = regionRepository.get(userConverter.getRegionId()).orElse(null);
+        List<Post> postList = postRepository.getPostListByIds(userConverter.getPostsId());
+        return  new User(userConverter.getId(),
+                userConverter.getFirstName(),
+                userConverter.getLastName(),
                 postList, region
         );
     }
 
-    private List<User> fromPersistUsers(List<PersistUser> persistUsers){
-        return persistUsers.stream().map(p -> {
+    private List<User> fromPersistUsers(List<UserConverter> userConverters){
+        return userConverters.stream().map(p -> {
             try {
                 return fromPersistUser(p);
             } catch (IOException e) {
@@ -336,8 +336,8 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
         }).collect(Collectors.toList());
     }
 
-    private PersistUser fromUser(User user){
-        return new PersistUser(
+    private UserConverter fromUser(User user){
+        return new UserConverter(
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
@@ -346,19 +346,19 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
                 );
     }
 
-    private List<PersistUser> fromUserList(List<User> users){
+    private List<UserConverter> fromUserList(List<User> users){
         return users.stream().map(this::fromUser).collect(Collectors.toList());
     }
 
     private AtomicLong getNextId() throws IOException {
         AtomicLong id = new AtomicLong(1);
 
-        List<PersistUser> persistUsers = getAllPersist();
-        if(persistUsers.isEmpty()){
+        List<UserConverter> userConverters = getAllPersist();
+        if(userConverters.isEmpty()){
             return id;
         }
 
-        for (PersistUser persist : persistUsers) {
+        for (UserConverter persist : userConverters) {
             if(persist.getId() > id.get()){
                 id.set(persist.getId());
             }
