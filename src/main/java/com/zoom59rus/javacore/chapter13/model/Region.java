@@ -13,5 +13,6 @@ public class Region{
 
     @Exclude
     private Long id;
+
     private String name;
 }

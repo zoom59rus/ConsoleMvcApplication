@@ -1,4 +1,4 @@
-package com.zoom59rus.javacore.chapter13.repository.io;
+package com.zoom59rus.javacore.chapter13.repository;
 
 import com.zoom59rus.javacore.chapter13.model.User;
 

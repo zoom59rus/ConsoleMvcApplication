@@ -1,5 +1,8 @@
-package com.zoom59rus.javacore.chapter13.model;
+package com.zoom59rus.javacore.chapter13.repository.converter;
 
+import com.zoom59rus.javacore.chapter13.model.Post;
+import com.zoom59rus.javacore.chapter13.model.Region;
+import com.zoom59rus.javacore.chapter13.model.User;
 import lombok.*;
 
 import java.util.List;

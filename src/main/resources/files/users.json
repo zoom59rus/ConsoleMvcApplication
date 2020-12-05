@@ -1,21 +1,14 @@
 [
   {
     "id": 1,
-    "firstName": "Антон",
-    "lastName": "Назаров",
+    "firstName": "Anton",
+    "lastName": "Nazarov",
     "postsId": [
       1,
-      2
+      2,
+      3,
+      4
     ],
     "regionId": 1
-  },
-  {
-    "id": 2,
-    "firstName": "Mac",
-    "lastName": "Book",
-    "postsId": [
-      3
-    ],
-    "regionId": 2
   }
 ]

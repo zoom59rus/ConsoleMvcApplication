@@ -1,15 +1,15 @@
-package com.zoom59rus.javacore.chapter13.repository;
+package com.zoom59rus.javacore.chapter13.repository.io;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.zoom59rus.javacore.chapter13.model.PersistUser;
+import com.zoom59rus.javacore.chapter13.repository.PostRepository;
+import com.zoom59rus.javacore.chapter13.repository.RegionRepository;
+import com.zoom59rus.javacore.chapter13.repository.UserRepository;
+import com.zoom59rus.javacore.chapter13.repository.converter.PersistUser;
 import com.zoom59rus.javacore.chapter13.model.Post;
 import com.zoom59rus.javacore.chapter13.model.Region;
 import com.zoom59rus.javacore.chapter13.model.User;
-import com.zoom59rus.javacore.chapter13.repository.io.PostRepository;
-import com.zoom59rus.javacore.chapter13.repository.io.RegionRepository;
-import com.zoom59rus.javacore.chapter13.repository.io.UserRepository;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
@@ -40,19 +40,18 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
 
     @Override
     public User save(User user) throws IOException {
-        List<PersistUser> persistUsers = getAllPersist();
-        user.setId(getId());
-        System.out.println(user.getId());
-        user.setPosts(postRepository.saveAll(user.getPosts()));
-        user.setRegion(regionRepository.save(user.getRegion()));
-        PersistUser persistUser = fromUser(user);
-
-        if(persistUsers.contains(persistUser)){
-            return fromPersistUser(persistUser);
+        List<User> savedUserList = getAll();
+        if(savedUserList.contains(user)){
+            return update(user);
         }
 
-        persistUsers.add(fromUser(user));
-        String json = gson.toJson(persistUsers, objectsType);
+        user.setId(getId());
+        user.setPosts(postRepository.saveAll(user.getPosts()));
+        user.setRegion(regionRepository.save(user.getRegion()));
+        savedUserList.add(user);
+
+        List<PersistUser> savePersistUser = fromUserList(savedUserList);
+        String json = gson.toJson(savePersistUser, objectsType);
 
         try(FileWriter fw = new FileWriter(sourcePath)){
             fw.write(json);
@@ -128,6 +127,17 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
             return false;
         }
 
+        persistUsers.stream()
+                .filter(u -> u.getId().equals(id))
+                .peek(u -> u.getPostsId().forEach(p -> {
+                    try {
+                        postRepository.remove(p);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }))
+                .collect(Collectors.toList());
+
         persistUsers = persistUsers.stream()
                 .filter(u -> !u.getId().equals(id))
                 .collect(Collectors.toList());
@@ -141,10 +151,19 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
 
     @Override
     public User update(User user) throws IOException {
-        if(remove(user.getId())){
-            List<User> userList = getAll();
-            userList.add(user);
-            String json = gson.toJson(user, objectsType);
+        User savedUser = getAll().stream()
+                .filter(u -> u.equals(user))
+                .findFirst()
+                .orElse(null);
+        if(savedUser == null){
+            throw new IOException("Не удалось получить существующую запись пользователя.");
+        }
+        List<Post> post = postRepository.saveAll(user.getPosts());
+        savedUser.getPosts().addAll(post);
+        if(remove(savedUser.getId())){
+            List<PersistUser> savePersistUser = getAllPersist();
+            savePersistUser.add(fromUser(savedUser));
+            String json = gson.toJson(savePersistUser, objectsType);
             try(FileWriter fw = new FileWriter(sourcePath)){
                 fw.write(json);
                 return user;
@@ -209,7 +228,6 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
     @Override
     public List<User> getUsersByRegion(String region) throws IOException {
         Optional<Region> searchRegion = regionRepository.get(region);
-        System.out.println(searchRegion.get());
         if(searchRegion.isPresent()){
             Region reg = searchRegion.get();
             System.out.println(reg);
@@ -298,11 +316,13 @@ public class JavaIOUserRepositoryImpl implements UserRepository {
     }
 
     private User fromPersistUser(PersistUser persistUser) throws IOException {
+        Region region = regionRepository.get(persistUser.getRegionId()).orElse(null);
+        List<Post> postList = postRepository.getPostListByIds(persistUser.getPostsId());
         return  new User(persistUser.getId(),
                 persistUser.getFirstName(),
                 persistUser.getLastName(),
-                postRepository.getPostListByIds(persistUser.getPostsId()),
-                regionRepository.get(persistUser.getId()).orElse(null));
+                postList, region
+        );
     }
 
     private List<User> fromPersistUsers(List<PersistUser> persistUsers){

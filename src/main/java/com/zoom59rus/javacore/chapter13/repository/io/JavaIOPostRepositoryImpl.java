@@ -1,10 +1,10 @@
-package com.zoom59rus.javacore.chapter13.repository;
+package com.zoom59rus.javacore.chapter13.repository.io;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.zoom59rus.javacore.chapter13.model.Post;
-import com.zoom59rus.javacore.chapter13.repository.io.PostRepository;
+import com.zoom59rus.javacore.chapter13.repository.PostRepository;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
@@ -76,6 +76,8 @@ public class JavaIOPostRepositoryImpl implements PostRepository {
 
     @Override
     public List<Post> saveAll(List<Post> lists) throws IOException {
+        List<Post> postList = getAll();
+
         lists = lists.stream()
                 .peek(p -> {
                     try {
@@ -86,9 +88,7 @@ public class JavaIOPostRepositoryImpl implements PostRepository {
                 })
                 .collect(Collectors.toList());
 
-        List<Post> postList = getAll();
         postList.addAll(lists);
-
         String json = gson.toJson(postList, objectsType);
 
         try(FileWriter fw = new FileWriter(sourcePath)){

@@ -1,11 +1,14 @@
 package com.zoom59rus.javacore.chapter13.controller;
 
+import com.zoom59rus.javacore.chapter13.model.Post;
+import com.zoom59rus.javacore.chapter13.model.Region;
 import com.zoom59rus.javacore.chapter13.model.User;
-import com.zoom59rus.javacore.chapter13.repository.JavaIOUserRepositoryImpl;
-import com.zoom59rus.javacore.chapter13.repository.io.UserRepository;
+import com.zoom59rus.javacore.chapter13.repository.io.JavaIOUserRepositoryImpl;
+import com.zoom59rus.javacore.chapter13.repository.UserRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,7 +30,7 @@ public class UserController {
         return null;
     }
 
-    public List<User> saveAll(List<User> users){
+    public List<User> saveAll(List<User> users) {
         try {
             return userRepository.saveAll(users);
         } catch (IOException e) {
@@ -37,7 +40,7 @@ public class UserController {
         return null;
     }
 
-    public User get(Long id){
+    public User get(Long id) {
         Optional<User> findUser = null;
         try {
             findUser = userRepository.get(id);
@@ -48,7 +51,7 @@ public class UserController {
         return findUser.orElse(null);
     }
 
-    public List<User> getAll(){
+    public List<User> getAll() {
         try {
             return userRepository.getAll();
         } catch (IOException e) {
@@ -58,41 +61,89 @@ public class UserController {
         return new ArrayList<>();
     }
 
-    public boolean remove(Long id) throws IOException{
-        return userRepository.remove(id);
+    public boolean remove(Long id) {
+        try {
+            return userRepository.remove(id);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
-    public User update(User user) throws IOException {
-
-        return null;
+    public boolean remove(User user) {
+        Optional<User> findUser = null;
+        try {
+            findUser = userRepository.getUserByFirstName(user.getFirstName());
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+        return findUser.filter(value -> remove(value.getId())).isPresent();
     }
 
+    public User update(User user){
+        if(remove(user)){
+            return save(user);
+        }else return null;
+    }
 
     public User getById(Long id) throws IOException {
         return get(id);
     }
 
-    public User getByFirstName(String firstName) throws IOException {
-        Optional<User> findUser = userRepository.getUserByFirstName(firstName);
-
-        return findUser.orElse(null);
-    }
-
-    public User getByLastName(String lastName) throws IOException {
-        return userRepository.getUserByLastName(lastName).orElse(null);
-    }
-
-    public User getByFirstAndLastNames(String firstName, String lastName) throws IOException {
-        return userRepository.getUserByFirstAndLastNames(firstName, lastName).orElse(null);
-    }
-
-    public List<User> getUsersByRegion(String region) throws IOException {
-        return getAll().stream().filter(u -> u.getRegion().equals(region)).collect(Collectors.toList());
-    }
-
-    public List<User> getUsersByPost(String post){
+    public User getByFirstName(String firstName) {
+        Optional<User> findUser = null;
         try {
-            return userRepository.getUsersByPost(post);
+            findUser = userRepository.getUserByFirstName(firstName);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+        if (findUser.isPresent()) {
+            User u = findUser.get();
+            u.setId(null);
+            return u;
+        } else return null;
+    }
+
+    public User getByLastName(String lastName) {
+        Optional<User> findUser = null;
+        try {
+            findUser = userRepository.getUserByLastName(lastName);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+        if (findUser.isPresent()) {
+            User u = findUser.get();
+            u.setId(null);
+            return u;
+        } else return null;
+    }
+
+    public User getByFirstAndLastNames(String firstName, String lastName) {
+        Optional<User> findUser = null;
+        try {
+            findUser = userRepository.getUserByFirstAndLastNames(firstName, lastName);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+        if (findUser.isPresent()) {
+            User u = findUser.get();
+            u.setId(null);
+            return u;
+        } else return null;
+    }
+
+    public List<User> getUsersByRegion(String region) {
+        return getAll().stream()
+                .filter(u -> u.getRegion().equals(region))
+                .peek(u -> u.setId(null))
+                .collect(Collectors.toList());
+    }
+
+    public List<User> getUsersByPost(String post) {
+        try {
+            return userRepository.getUsersByPost(post).stream()
+                    .peek(u -> u.setId(null))
+                    .collect(Collectors.toList());
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
@@ -100,9 +151,11 @@ public class UserController {
         return new ArrayList<>();
     }
 
-    public List<User> getUsersByFirstName(String firstName){
+    public List<User> getUsersByFirstName(String firstName) {
         try {
-            return userRepository.getUsersByFirstName(firstName);
+            return userRepository.getUsersByFirstName(firstName).stream()
+                    .peek(u -> u.setId(null))
+                    .collect(Collectors.toList());
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
@@ -110,9 +163,11 @@ public class UserController {
         return new ArrayList<>();
     }
 
-    public List<User> getUsersByLastName(String lastName){
+    public List<User> getUsersByLastName(String lastName) {
         try {
-            return userRepository.getUsersByLastName(lastName);
+            return userRepository.getUsersByLastName(lastName).stream()
+                    .peek(u -> u.setId(null))
+                    .collect(Collectors.toList());
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
@@ -120,13 +175,30 @@ public class UserController {
         return new ArrayList<>();
     }
 
-    public List<User> getUsersByFirstAndLastName(String firstName, String lastName){
+    public List<User> getUsersByFirstAndLastName(String firstName, String lastName) {
         try {
-            return userRepository.getUsersByFirstAndLastNames(firstName, lastName);
+            return userRepository.getUsersByFirstAndLastNames(firstName, lastName).stream()
+                    .peek(u -> u.setId(null))
+                    .collect(Collectors.toList());
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
 
         return new ArrayList<>();
+    }
+
+    public boolean createUser(String firstName, String lastName, List<String> contents, String region) {
+        List<Post> postList = contents.stream()
+                .map(p -> new Post(null, p, new Date()))
+                .collect(Collectors.toList());
+        Region p = new Region(null, region);
+        User persistUser = new User(null, firstName, lastName, postList, p);
+
+        persistUser = save(persistUser);
+
+        if (persistUser != null) {
+            persistUser.setId(null);
+            return true;
+        } else return false;
     }
 }

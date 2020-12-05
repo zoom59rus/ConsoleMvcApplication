@@ -1,8 +1,8 @@
 package com.zoom59rus.javacore.chapter13.controller;
 
 import com.zoom59rus.javacore.chapter13.model.Region;
-import com.zoom59rus.javacore.chapter13.repository.JavaIORegionRepositoryImpl;
-import com.zoom59rus.javacore.chapter13.repository.io.RegionRepository;
+import com.zoom59rus.javacore.chapter13.repository.io.JavaIORegionRepositoryImpl;
+import com.zoom59rus.javacore.chapter13.repository.RegionRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;

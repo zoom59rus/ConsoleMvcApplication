@@ -14,6 +14,7 @@ public class Post{
     private Long id;
 
     private String content;
+    @Exclude
     private Date created;
     @Exclude
     private Date updated;

@@ -1,10 +1,10 @@
-package com.zoom59rus.javacore.chapter13.repository;
+package com.zoom59rus.javacore.chapter13.repository.io;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.zoom59rus.javacore.chapter13.model.Region;
-import com.zoom59rus.javacore.chapter13.repository.io.RegionRepository;
+import com.zoom59rus.javacore.chapter13.repository.RegionRepository;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
@@ -77,7 +77,6 @@ public class JavaIORegionRepositoryImpl implements RegionRepository {
 
     @Override
     public Optional<Region> get(Long id) throws IOException {
-
         return getAll().stream()
                 .filter(r -> r.getId().equals(id))
                 .findAny();
@@ -168,9 +167,7 @@ public class JavaIORegionRepositoryImpl implements RegionRepository {
         List<Region> regionList = gson.fromJson(loadFileData(), regionsType);
         if (regionList == null) {
             return new ArrayList<>();
-        }
-
-        return regionList;
+        }else return regionList;
     }
 
     public List<Region> search(String name) throws IOException {

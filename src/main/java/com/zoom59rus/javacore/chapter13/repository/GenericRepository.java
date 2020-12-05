@@ -1,4 +1,4 @@
-package com.zoom59rus.javacore.chapter13.repository.io;
+package com.zoom59rus.javacore.chapter13.repository;
 
 import java.io.IOException;
 import java.util.List;
