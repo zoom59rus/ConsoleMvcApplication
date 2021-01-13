@@ -1,22 +1,34 @@
 package com.zoom59rus.javacore.chapter13.model;
 
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvDate;
 import lombok.*;
-import lombok.EqualsAndHashCode.Exclude;
 
 import java.util.Date;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode
 @ToString
 public class Post{
-    @Exclude
+    @EqualsAndHashCode.Exclude
+    @CsvBindByName
     private Long id;
 
+    @CsvBindByName
     private String content;
-    @Exclude
+
+    @EqualsAndHashCode.Exclude
+    @CsvDate("dd/MM/yyyy hh:mm:ss")
+    @CsvBindByName
     private Date created;
-    @Exclude
+
+    @EqualsAndHashCode.Exclude
+    @CsvDate("dd/MM/yyyy hh:mm:ss")
+    @CsvBindByName
     private Date updated;
 
     public Post(Long id, String content, Date created) {

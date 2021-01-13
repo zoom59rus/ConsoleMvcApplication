@@ -1,7 +1,7 @@
 package com.zoom59rus.javacore.chapter13.controller;
 
 import com.zoom59rus.javacore.chapter13.model.Post;
-import com.zoom59rus.javacore.chapter13.repository.io.JavaIOPostRepositoryImpl;
+import com.zoom59rus.javacore.chapter13.repository.io.json.JavaIOPostRepositoryImpl;
 import com.zoom59rus.javacore.chapter13.repository.PostRepository;
 
 import java.io.IOException;

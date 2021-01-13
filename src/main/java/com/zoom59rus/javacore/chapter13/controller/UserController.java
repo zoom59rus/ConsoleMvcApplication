@@ -3,7 +3,8 @@ package com.zoom59rus.javacore.chapter13.controller;
 import com.zoom59rus.javacore.chapter13.model.Post;
 import com.zoom59rus.javacore.chapter13.model.Region;
 import com.zoom59rus.javacore.chapter13.model.User;
-import com.zoom59rus.javacore.chapter13.repository.io.JavaIOUserRepositoryImpl;
+import com.zoom59rus.javacore.chapter13.repository.io.csv.CsvUserRepositoryImpl;
+import com.zoom59rus.javacore.chapter13.repository.io.json.JavaIOUserRepositoryImpl;
 import com.zoom59rus.javacore.chapter13.repository.UserRepository;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ public class UserController {
     private final UserRepository userRepository;
 
     public UserController() {
-        this.userRepository = new JavaIOUserRepositoryImpl();
+        this.userRepository = CsvUserRepositoryImpl.getInstance();
     }
 
     public User save(User user) {

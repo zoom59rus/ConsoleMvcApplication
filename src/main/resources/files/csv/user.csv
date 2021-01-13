@@ -1,0 +1,4 @@
+"FIRSTNAME","ID","LASTNAME","POSTSID","REGIONID"
+"Anton","1","Nazarov","[1, 2, 3, 4]","1"
+"Anton","2","Nazarov","[1, 2, 3, 4, 5, 6, 7, 8]","1"
+"Zurab","3","Matua","[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]","2"

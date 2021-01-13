@@ -1,18 +1,19 @@
 package com.zoom59rus.javacore.chapter13.model;
 
+import com.opencsv.bean.CsvBindByName;
 import lombok.*;
-import lombok.EqualsAndHashCode.Exclude;
 
-
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode
 @ToString
 public class Region{
 
-    @Exclude
+    @EqualsAndHashCode.Exclude
+    @CsvBindByName
     private Long id;
 
+    @CsvBindByName
     private String name;
 }
